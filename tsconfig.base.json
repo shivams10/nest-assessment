@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "strict": true,
+      "target": "ES2020",
+      "moduleResolution": "Node",
+      "baseUrl": ".",
+      "paths": {
+        "@shared/*": ["packages/shared-types/src/*"]
+      }
+    }
+  }
+  

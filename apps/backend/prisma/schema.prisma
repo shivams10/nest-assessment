@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ============================
+   ENUMS
+============================ */
+
+enum UserRole {
+  admin
+  moderator
+  candidate
+}
+
+enum SessionStatus {
+  upcoming
+  active
+  completed
+}
+
+enum QuestionCategory {
+  aptitude
+  technical
+}
+
+enum QuestionType {
+  single_select
+  multi_select
+}
+
+enum SectionType {
+  aptitude
+  technical
+}
+
+enum MonitoringEventType {
+  tab_switch
+  screenshot
+  blur
+  focus
+}
+
+/* ============================
+   CORE TABLES
+============================ */
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String?
+  role             UserRole
+  firstName        String?
+  lastName         String?
+  collegeSessionId String?
+  isActive         Boolean  @default(true)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  deletedAt        DateTime?
+
+  // Inverse relations
+  recruitmentSessions RecruitmentSession[] @relation("SessionCreator")
+  exams               Exam[]               @relation("ExamCreator")
+  questionsCreated    Question[]
+  bulkUploads         BulkUpload[]
+}
+
+model College {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  recruitmentSessions RecruitmentSession[]
+}
+
+model RecruitmentSession {
+  id         String        @id @default(uuid())
+  name       String
+  year       Int
+  startDate  DateTime?
+  endDate    DateTime?
+  status     SessionStatus
+
+  collegeId  String
+  createdBy  String
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  college    College @relation(fields: [collegeId], references: [id])
+  creator    User    @relation("SessionCreator", fields: [createdBy], references: [id])
+
+  exams       Exam[]
+  bulkUploads BulkUpload[]
+}
+
+model Exam {
+  id                 String   @id @default(uuid())
+  title              String
+  description        String?
+  windowStartsAt     DateTime?
+  windowEndsAt       DateTime?
+  durationSeconds    Int
+  isPublished        Boolean  @default(false)
+  masterPasswordHash String
+
+  collegeSessionId   String
+  createdBy          String
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  deletedAt          DateTime?
+
+  session   RecruitmentSession @relation(fields: [collegeSessionId], references: [id])
+  creator   User               @relation("ExamCreator", fields: [createdBy], references: [id])
+  examSets  ExamSet[]
+}
+
+model Question {
+  id        String           @id @default(uuid())
+  category  QuestionCategory
+  stem      String
+  type      QuestionType
+  points    Int              @default(1)
+
+  createdBy String
+  createdAt DateTime         @default(now())
+  deletedAt DateTime?
+
+  creator          User               @relation(fields: [createdBy], references: [id])
+  options          QuestionOption[]
+  examSetQuestions ExamSetQuestion[]
+}
+
+model QuestionOption {
+  id         String   @id @default(uuid())
+  optionText String
+  isCorrect  Boolean @default(false)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model ExamSet {
+  id        String   @id @default(uuid())
+  name      String
+  examId    String
+  createdAt DateTime @default(now())
+
+  exam     Exam             @relation(fields: [examId], references: [id])
+  sections ExamSetSection[]
+}
+
+model ExamSetSection {
+  id            String      @id @default(uuid())
+  sectionType   SectionType
+  questionCount Int
+
+  examSetId     String
+  examSet       ExamSet    @relation(fields: [examSetId], references: [id])
+
+  questions     ExamSetQuestion[]
+}
+
+model ExamSetQuestion {
+  id               String @id @default(uuid())
+  examSetSectionId String
+  questionId       String
+
+  section  ExamSetSection @relation(fields: [examSetSectionId], references: [id])
+  question Question       @relation(fields: [questionId], references: [id])
+}
+
+model BulkUpload {
+  id               String   @id @default(uuid())
+  fileUrl          String
+  errorCsvUrl      String?
+  totalRows        Int
+  successCount     Int
+  failedCount      Int
+
+  uploadedBy       String
+  collegeSessionId String
+
+  createdAt        DateTime @default(now())
+
+  uploader User               @relation(fields: [uploadedBy], references: [id])
+  session  RecruitmentSession @relation(fields: [collegeSessionId], references: [id])
+}
+
+/* ============================
+   RUNTIME / HISTORICAL TABLES
+============================ */
+
+model Submission {
+  id            String   @id @default(uuid())
+  examId        String
+  userId        String
+  examSetId     String
+
+  startedAt     DateTime?
+  submittedAt   DateTime?
+  autoSubmitted Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  deletedAt     DateTime?
+
+  scores      SubmissionScore[]
+  monitoring  MonitoringEvent[]
+  finalResult FinalResult?
+}
+
+model SubmissionScore {
+  id            String   @id @default(uuid())
+  submissionId  String
+  questionId    String
+  marksObtained Float
+  answeredAt    DateTime?
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  answers    SubmissionAnswer[]
+}
+
+model SubmissionAnswer {
+  id                String @id @default(uuid())
+  submissionScoreId String
+  selectedOptionId  String
+
+  submissionScore SubmissionScore @relation(fields: [submissionScoreId], references: [id], onDelete: Cascade)
+}
+
+model MonitoringEvent {
+  id           String               @id @default(uuid())
+  submissionId String
+  eventType    MonitoringEventType
+  eventCount   Int
+  createdAt    DateTime             @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model FinalResult {
+  id                   String   @id @default(uuid())
+  submissionId         String   @unique
+  totalMarks           Float
+  aptitudeMarks        Float
+  technicalMarks       Float
+  tabSwitchCount       Int
+  screenshotTaken      Boolean  @default(false)
+  kicked               Boolean  @default(false)
+  selectedForNextRound Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
