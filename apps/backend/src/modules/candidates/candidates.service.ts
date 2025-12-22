@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { ListCandidatesDto } from './dto/list-candidates.dto';
 import { CANDIDATE_PUBLIC_SELECT } from './constants/candidate-public.select';
@@ -76,5 +77,45 @@ export class CandidatesService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async activateCandidate(candidateId: string) {
+    const candidate = await this.prisma.user.findFirst({
+      where: {
+        id: candidateId,
+        role: UserRole.candidate,
+        deletedAt: null,
+      },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    return this.prisma.user.update({
+      where: { id: candidateId },
+      data: { isActive: true },
+      select: CANDIDATE_PUBLIC_SELECT,
+    });
+  }
+
+  async deactivateCandidate(candidateId: string) {
+    const candidate = await this.prisma.user.findFirst({
+      where: {
+        id: candidateId,
+        role: UserRole.candidate,
+        deletedAt: null,
+      },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    return this.prisma.user.update({
+      where: { id: candidateId },
+      data: { isActive: false },
+      select: CANDIDATE_PUBLIC_SELECT,
+    });
   }
 }

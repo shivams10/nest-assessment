@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
+import { Strategy, ExtractJwt, StrategyOptions } from 'passport-jwt';
 import { ConfigService } from '@config/config.service';
 
 export interface JwtPayload {
@@ -11,12 +11,16 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
-    super({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
+    const jwtFromRequest: StrategyOptions['jwtFromRequest'] =
+      ExtractJwt.fromAuthHeaderAsBearerToken();
+
+    const options: StrategyOptions = {
+      jwtFromRequest,
       secretOrKey: configService.jwtAccessSecret,
-    });
+      ignoreExpiration: false,
+    };
+
+    super(options);
   }
 
   validate(payload: JwtPayload): JwtPayload {

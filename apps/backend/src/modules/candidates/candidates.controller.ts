@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Param, Patch } from '@nestjs/common';
+
 import { CandidatesService } from './candidates.service';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { ListCandidatesDto } from './dto/list-candidates.dto';
@@ -20,5 +22,15 @@ export class CandidatesController {
   @Get()
   listCandidates(@Query() dto: ListCandidatesDto) {
     return this.candidatesService.listCandidates(dto);
+  }
+
+  @Patch(':id/activate')
+  activateCandidate(@Param('id') id: string) {
+    return this.candidatesService.activateCandidate(id);
+  }
+
+  @Patch(':id/deactivate')
+  deactivateCandidate(@Param('id') id: string) {
+    return this.candidatesService.deactivateCandidate(id);
   }
 }
