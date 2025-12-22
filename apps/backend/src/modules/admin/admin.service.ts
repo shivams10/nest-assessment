@@ -32,6 +32,15 @@ export class AdminService {
         role: 'admin',
         passwordHash,
       },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -53,6 +62,15 @@ export class AdminService {
         lastName: dto.lastName,
         role: 'moderator',
         passwordHash,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
       },
     });
   }
