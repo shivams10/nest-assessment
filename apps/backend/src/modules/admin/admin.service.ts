@@ -8,6 +8,7 @@ import { PrismaService } from '@prisma/prisma.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateModeratorDto } from './dto/create-moderator.dto';
 import { ListUsersDto } from './dto/list-users.dto';
+import { USER_PUBLIC_SELECT } from './constants/user-public.select';
 
 @Injectable()
 export class AdminService {
@@ -32,15 +33,7 @@ export class AdminService {
         role: 'admin',
         passwordHash,
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
+      select: USER_PUBLIC_SELECT,
     });
   }
 
@@ -63,15 +56,7 @@ export class AdminService {
         role: 'moderator',
         passwordHash,
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
+      select: USER_PUBLIC_SELECT,
     });
   }
 
@@ -87,6 +72,7 @@ export class AdminService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { isActive },
+      select: USER_PUBLIC_SELECT,
     });
   }
 
@@ -102,6 +88,7 @@ export class AdminService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { deletedAt: new Date(), isActive: false },
+      select: USER_PUBLIC_SELECT,
     });
   }
 
@@ -121,15 +108,7 @@ export class AdminService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          firstName: true,
-          lastName: true,
-          isActive: true,
-          createdAt: true,
-        },
+        select: USER_PUBLIC_SELECT,
       }),
       this.prisma.user.count({ where }),
     ]);
