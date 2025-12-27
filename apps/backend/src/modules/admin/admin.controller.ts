@@ -16,10 +16,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ListUsersDto } from './dto/list-users.dto';
+import { ListResultsDto } from './dto/list-results.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@Roles('admin', 'moderator')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -46,5 +47,10 @@ export class AdminController {
   @Get('users')
   listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
+  }
+
+  @Get('results')
+  listResults(@Query() dto: ListResultsDto) {
+    return this.adminService.listResults(dto);
   }
 }

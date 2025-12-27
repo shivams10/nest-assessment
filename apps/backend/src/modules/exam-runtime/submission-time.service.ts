@@ -1,9 +1,13 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { SubmissionRepository } from './submission.repository';
+import { SubmissionService } from './submission.service';
 
 @Injectable()
 export class SubmissionTimeService {
-  constructor(private readonly submissionRepo: SubmissionRepository) {}
+  constructor(
+    private readonly submissionRepo: SubmissionRepository,
+    private readonly submissionService: SubmissionService,
+  ) {}
 
   async assertSubmissionActive(submissionId: string) {
     const submission =
@@ -24,7 +28,8 @@ export class SubmissionTimeService {
     );
 
     if (new Date() >= examEndTime) {
-      await this.submissionRepo.autoSubmit(submissionId);
+      // Use SubmissionService to trigger scoring
+      await this.submissionService.autoSubmit(submissionId);
       throw new ForbiddenException('Exam auto-submitted');
     }
 

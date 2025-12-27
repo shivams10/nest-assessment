@@ -266,6 +266,7 @@ model FinalResult {
   screenshotTaken      Boolean  @default(false)
   kicked               Boolean  @default(false)
   selectedForNextRound Boolean  @default(false)
+  rank                 Int?
 
   createdAt  DateTime @default(now())
 
