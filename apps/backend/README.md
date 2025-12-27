@@ -1,29 +1,115 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend API - Online Assessment System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-ready NestJS 11 backend for an online examination and assessment platform.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📚 Documentation
 
-## Description
+- **[QUICK_START.md](./QUICK_START.md)** - Get started in 5 minutes
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Complete technical documentation
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Setup environment
+cp .env.example .env  # Edit with your credentials
+
+# Setup database
+pnpm prisma generate
+pnpm prisma migrate dev
+
+# Start development server
+pnpm run start:dev
+```
+
+See [QUICK_START.md](./QUICK_START.md) for detailed setup instructions.
+
+## 📋 Overview
+
+This backend provides:
+- **Multi-role authentication** (Admin, Moderator, Candidate)
+- **Exam management** with multiple question sets
+- **Real-time exam execution** with answer submission
+- **Automated scoring and ranking**
+- **Bulk candidate management** via CSV
+- **Result filtering and pagination**
+
+## 🛠️ Technology Stack
+
+- **NestJS 11** - Progressive Node.js framework
+- **TypeScript 5.7** - Type-safe development
+- **PostgreSQL** - Relational database
+- **Prisma 7** - Type-safe ORM
+- **JWT** - Authentication
+- **Rate Limiting** - API protection
+
+## 📁 Project Structure
+
+```
+apps/backend/
+├── src/
+│   ├── modules/          # Feature modules
+│   │   ├── auth/         # Authentication
+│   │   ├── admin/        # Admin operations
+│   │   ├── candidates/   # Candidate management
+│   │   ├── exams/        # Exam management
+│   │   ├── exam-runtime/ # Exam execution
+│   │   └── scoring/      # Scoring & ranking
+│   ├── config/           # Configuration
+│   └── prisma/           # Database module
+└── prisma/
+    ├── schema.prisma     # Database schema
+    └── migrations/       # Database migrations
+```
+
+## 🔐 Authentication
+
+All protected endpoints require JWT authentication:
+
+```bash
+Authorization: Bearer <accessToken>
+```
+
+Roles: `admin`, `moderator`, `candidate`
+
+## 📖 Available Scripts
+
+```bash
+pnpm run start:dev      # Development with hot-reload
+pnpm run build          # Build for production
+pnpm run start:prod     # Production server
+pnpm run lint           # Lint code
+pnpm run test           # Run tests
+pnpm run test:cov       # Test coverage
+```
+
+## 🏗️ Architecture
+
+Strict **Controller → Service → Repository** pattern:
+- Controllers handle HTTP requests
+- Services contain business logic
+- Repositories handle database operations
+- No direct Prisma access from controllers
+
+## 📝 Key Features
+
+- ✅ JWT-based authentication
+- ✅ Role-based access control
+- ✅ Rate limiting
+- ✅ Structured logging
+- ✅ Batch processing for large datasets
+- ✅ Database connection pooling
+- ✅ Production-ready error handling
+- ✅ Type-safe with strict TypeScript
+
+## 🔗 Resources
+
+- [Full Documentation](./DOCUMENTATION.md)
+- [Quick Start Guide](./QUICK_START.md)
+- [NestJS Documentation](https://docs.nestjs.com)
+- [Prisma Documentation](https://www.prisma.io/docs)
 
 ## Project setup
 
