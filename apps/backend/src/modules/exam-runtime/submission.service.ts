@@ -2,12 +2,15 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { SubmissionRepository } from './submission.repository';
 import { ScoringService } from '../scoring/scoring.service';
 
 @Injectable()
 export class SubmissionService {
+  private readonly logger = new Logger(SubmissionService.name);
+
   constructor(
     private readonly submissionRepository: SubmissionRepository,
     private readonly scoringService: ScoringService,
@@ -40,6 +43,10 @@ export class SubmissionService {
       submissionId: updatedSubmission.id,
     });
 
+    this.logger.log(
+      `Exam manually submitted: submissionId=${submissionId}, userId=${userId}`,
+    );
+
     return {
       submissionId: updatedSubmission.id,
       submittedAt: updatedSubmission.submittedAt,
@@ -71,6 +78,10 @@ export class SubmissionService {
     await this.scoringService.scoreSubmission({
       submissionId,
     });
+
+    this.logger.log(
+      `Exam auto-submitted: submissionId=${submissionId}, userId=${submission.userId}`,
+    );
   }
 
   /**

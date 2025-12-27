@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
@@ -10,6 +11,8 @@ import { CreateExamDto } from './dto/create-exam.dto';
 import { ListExamsDto, ExamStatusFilter } from './dto/list-exams.dto';
 @Injectable()
 export class ExamService {
+  private readonly logger = new Logger(ExamService.name);
+
   constructor(private readonly examRepository: ExamRepository) {}
 
   /**
@@ -29,7 +32,13 @@ export class ExamService {
       throw new NotFoundException('Exam not found');
     }
 
-    return this.examRepository.publish(examId);
+    const updated = await this.examRepository.publish(examId);
+
+    this.logger.log(
+      `Exam published: examId=${examId}, title=${updated.title}, collegeSessionId=${updated.collegeSessionId}`,
+    );
+
+    return updated;
   }
 
   async createExam(dto: CreateExamDto, createdBy: string) {
@@ -42,7 +51,7 @@ export class ExamService {
 
     const masterPasswordHash = await bcrypt.hash(dto.masterPassword, 10);
 
-    return this.examRepository.create({
+    const exam = await this.examRepository.create({
       title: dto.title,
       description: dto.description,
       windowStartsAt,
@@ -59,6 +68,12 @@ export class ExamService {
         connect: { id: dto.collegeSessionId },
       },
     });
+
+    this.logger.log(
+      `Exam created: examId=${exam.id}, title=${exam.title}, createdBy=${createdBy}, collegeSessionId=${dto.collegeSessionId}`,
+    );
+
+    return exam;
   }
 
   async listExamsForAdmin(dto: ListExamsDto) {
@@ -97,6 +112,12 @@ export class ExamService {
       throw new BadRequestException('Cannot unpublish a live exam');
     }
 
-    return this.examRepository.unpublish(examId);
+    const updated = await this.examRepository.unpublish(examId);
+
+    this.logger.log(
+      `Exam unpublished: examId=${examId}, title=${updated.title}, collegeSessionId=${updated.collegeSessionId}`,
+    );
+
+    return updated;
   }
 }
