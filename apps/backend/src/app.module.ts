@@ -10,6 +10,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ExamsModule } from './modules/exams/exam.module';
 import { ExamAttemptsModule } from './modules/exam-attempts/exam-attempts.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -19,12 +20,13 @@ import { ExamAttemptsModule } from './modules/exam-attempts/exam-attempts.module
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60 seconds
-        limit: 100, // 100 requests per 60 seconds
+        limit: 300, // 300 requests per 60 seconds
       },
     ]),
     ExamsModule,
     ExamAttemptsModule,
     AuthModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
