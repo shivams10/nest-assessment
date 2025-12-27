@@ -6,9 +6,11 @@ datasource db {
   provider = "postgresql"
 }
 
-/* ============================
-   ENUMS
-============================ */
+/**
+ * ============================
+ * ENUMS
+ * ============================
+ */
 
 enum UserRole {
   admin
@@ -44,9 +46,11 @@ enum MonitoringEventType {
   focus
 }
 
-/* ============================
-   CORE TABLES
-============================ */
+/**
+ * ============================
+ * CORE TABLES
+ * ============================
+ */
 
 model User {
   id               String   @id @default(uuid())
@@ -58,15 +62,16 @@ model User {
   collegeSessionId String?
   isActive         Boolean  @default(true)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  deletedAt        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Inverse relations
   recruitmentSessions RecruitmentSession[] @relation("SessionCreator")
   exams               Exam[]               @relation("ExamCreator")
   questionsCreated    Question[]
   bulkUploads         BulkUpload[]
+
   @@index([role])
   @@index([collegeSessionId])
 }
@@ -80,70 +85,75 @@ model College {
 }
 
 model RecruitmentSession {
-  id         String        @id @default(uuid())
-  name       String
-  year       Int
-  startDate  DateTime?
-  endDate    DateTime?
-  status     SessionStatus
+  id        String        @id @default(uuid())
+  name      String
+  year      Int
+  startDate DateTime?
+  endDate   DateTime?
+  status    SessionStatus
 
-  collegeId  String
-  createdBy  String
+  collegeId String
+  createdBy String
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  college    College @relation(fields: [collegeId], references: [id])
-  creator    User    @relation("SessionCreator", fields: [createdBy], references: [id])
+  college College @relation(fields: [collegeId], references: [id])
+  creator User    @relation("SessionCreator", fields: [createdBy], references: [id])
 
   exams       Exam[]
   bulkUploads BulkUpload[]
+
+  @@index([collegeId])
+  @@index([status])
+  @@index([createdBy])
 }
 
 model Exam {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   title              String
   description        String?
   windowStartsAt     DateTime?
   windowEndsAt       DateTime?
   durationSeconds    Int
-  isPublished        Boolean  @default(false)
+  isPublished        Boolean   @default(false)
   masterPasswordHash String
 
-  collegeSessionId   String
-  createdBy          String
+  collegeSessionId String
+  createdBy        String
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  deletedAt          DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  session   RecruitmentSession @relation(fields: [collegeSessionId], references: [id])
-  creator   User               @relation("ExamCreator", fields: [createdBy], references: [id])
-  examSets  ExamSet[]
-  submissions         Submission[] 
+  session     RecruitmentSession @relation(fields: [collegeSessionId], references: [id])
+  creator     User               @relation("ExamCreator", fields: [createdBy], references: [id])
+  examSets    ExamSet[]
+  submissions Submission[]
+
   @@index([collegeSessionId])
   @@index([isPublished])
 }
 
 model Question {
-  id        String           @id @default(uuid())
-  category  QuestionCategory
-  stem      String
-  type      QuestionType
-  points    Int              @default(1)
+  id       String           @id @default(uuid())
+  category QuestionCategory
+  stem     String
+  type     QuestionType
+  points   Int              @default(1)
 
   createdBy String
-  createdAt DateTime         @default(now())
+  createdAt DateTime  @default(now())
   deletedAt DateTime?
 
-  creator          User               @relation(fields: [createdBy], references: [id])
+  creator          User              @relation(fields: [createdBy], references: [id])
   options          QuestionOption[]
   examSetQuestions ExamSetQuestion[]
 }
 
 model QuestionOption {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   optionText String
   isCorrect  Boolean @default(false)
 
@@ -159,6 +169,8 @@ model ExamSet {
 
   exam     Exam             @relation(fields: [examId], references: [id])
   sections ExamSetSection[]
+
+  @@index([examId])
 }
 
 model ExamSetSection {
@@ -166,10 +178,10 @@ model ExamSetSection {
   sectionType   SectionType
   questionCount Int
 
-  examSetId     String
-  examSet       ExamSet    @relation(fields: [examSetId], references: [id])
+  examSetId String
+  examSet   ExamSet @relation(fields: [examSetId], references: [id])
 
-  questions     ExamSetQuestion[]
+  questions ExamSetQuestion[]
 }
 
 model ExamSetQuestion {
@@ -182,43 +194,45 @@ model ExamSetQuestion {
 }
 
 model BulkUpload {
-  id               String   @id @default(uuid())
-  fileUrl          String
-  errorCsvUrl      String?
-  totalRows        Int
-  successCount     Int
-  failedCount      Int
+  id           String  @id @default(uuid())
+  fileUrl      String
+  errorCsvUrl  String?
+  totalRows    Int
+  successCount Int
+  failedCount  Int
 
   uploadedBy       String
   collegeSessionId String
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
   uploader User               @relation(fields: [uploadedBy], references: [id])
   session  RecruitmentSession @relation(fields: [collegeSessionId], references: [id])
 }
 
-/* ============================
-   RUNTIME / HISTORICAL TABLES
-============================ */
+/**
+ * ============================
+ * RUNTIME / HISTORICAL TABLES
+ * ============================
+ */
 
 model Submission {
-  id            String   @id @default(uuid())
-  examId        String
-  userId        String
-  examSetId     String
+  id        String @id @default(uuid())
+  examId    String
+  userId    String
+  examSetId String
 
   startedAt     DateTime?
   submittedAt   DateTime?
-  autoSubmitted Boolean  @default(false)
+  autoSubmitted Boolean   @default(false)
 
-  createdAt     DateTime @default(now())
-  deletedAt     DateTime?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
-  exam          Exam     @relation(fields: [examId], references: [id])
-  scores        SubmissionScore[]
-  monitoring    MonitoringEvent[]
-  finalResult   FinalResult?
+  exam        Exam              @relation(fields: [examId], references: [id])
+  scores      SubmissionScore[]
+  monitoring  MonitoringEvent[]
+  finalResult FinalResult?
 
   @@index([examId])
   @@index([userId])
@@ -226,16 +240,17 @@ model Submission {
 }
 
 model SubmissionScore {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   submissionId  String
   questionId    String
   marksObtained Float
   answeredAt    DateTime?
 
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission Submission         @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   answers    SubmissionAnswer[]
 
   @@unique([submissionId, questionId])
+  @@index([submissionId])
 }
 
 model SubmissionAnswer {
@@ -244,31 +259,37 @@ model SubmissionAnswer {
   selectedOptionId  String
 
   submissionScore SubmissionScore @relation(fields: [submissionScoreId], references: [id], onDelete: Cascade)
+
+  @@index([submissionScoreId])
 }
 
 model MonitoringEvent {
-  id           String               @id @default(uuid())
+  id           String              @id @default(uuid())
   submissionId String
   eventType    MonitoringEventType
   eventCount   Int
-  createdAt    DateTime             @default(now())
+  createdAt    DateTime            @default(now())
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }
 
 model FinalResult {
-  id                   String   @id @default(uuid())
-  submissionId         String   @unique
+  id                   String  @id @default(uuid())
+  submissionId         String  @unique
   totalMarks           Float
   aptitudeMarks        Float
   technicalMarks       Float
   tabSwitchCount       Int
-  screenshotTaken      Boolean  @default(false)
-  kicked               Boolean  @default(false)
-  selectedForNextRound Boolean  @default(false)
+  screenshotTaken      Boolean @default(false)
+  kicked               Boolean @default(false)
+  selectedForNextRound Boolean @default(false)
   rank                 Int?
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([rank])
+  @@index([selectedForNextRound])
+  @@index([submissionId, rank])
 }
