@@ -35,13 +35,6 @@ export class ExamRepository {
   }
 
   /**
-   * Create a new exam
-   */
-  create(data: Prisma.ExamCreateInput) {
-    return this.prisma.exam.create({ data });
-  }
-
-  /**
    * Publish an exam
    */
   publish(examId: string) {
@@ -58,6 +51,65 @@ export class ExamRepository {
     return this.prisma.exam.update({
       where: { id: examId },
       data: { deletedAt: new Date() },
+    });
+  }
+
+  create(data: Prisma.ExamCreateInput) {
+    return this.prisma.exam.create({
+      data,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        windowStartsAt: true,
+        windowEndsAt: true,
+        durationSeconds: true,
+        isPublished: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async findForAdmin(filters: {
+    collegeSessionId?: string;
+    isPublished?: boolean;
+    skip: number;
+    take: number;
+  }) {
+    const { collegeSessionId, isPublished, skip, take } = filters;
+
+    const where = {
+      deletedAt: null,
+      ...(collegeSessionId && { collegeSessionId }),
+      ...(typeof isPublished === 'boolean' && { isPublished }),
+    };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.exam.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        select: {
+          id: true,
+          title: true,
+          isPublished: true,
+          windowStartsAt: true,
+          windowEndsAt: true,
+          durationSeconds: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.exam.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  unpublish(id: string) {
+    return this.prisma.exam.update({
+      where: { id },
+      data: { isPublished: false },
     });
   }
 }
