@@ -6,21 +6,21 @@ export interface ParsedCandidateRow {
   lastName: string;
 }
 
-type RawCsvRow = {
+interface RawCsvRow {
   email?: string;
   first_name?: string;
   last_name?: string;
-};
+}
 
 export function parseCandidateCsv(buffer: Buffer): ParsedCandidateRow[] {
   const records = parse(buffer, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  }) as RawCsvRow[];
+  });
 
-  return records.map((row) => ({
-    email: row.email?.toLowerCase() ?? '',
+  return records.map((row: RawCsvRow) => ({
+    email: (row.email ?? '').toLowerCase(),
     firstName: row.first_name ?? '',
     lastName: row.last_name ?? '',
   }));

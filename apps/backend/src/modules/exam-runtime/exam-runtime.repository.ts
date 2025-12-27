@@ -5,7 +5,15 @@ import { PrismaService } from '@prisma/prisma.service';
 export class ExamRuntimeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findSubmission(submissionId: string, userId: string) {
+  findSubmission(
+    submissionId: string,
+    userId: string,
+  ): Promise<{
+    id: string;
+    examSetId: string;
+    startedAt: Date | null;
+    submittedAt: Date | null;
+  } | null> {
     return this.prisma.submission.findFirst({
       where: {
         id: submissionId,
@@ -21,7 +29,24 @@ export class ExamRuntimeRepository {
     });
   }
 
-  getExamSetStructure(examSetId: string) {
+  getExamSetStructure(examSetId: string): Promise<{
+    id: string;
+    name: string;
+    sections: Array<{
+      id: string;
+      sectionType: string;
+      questionCount: number;
+      questions: Array<{
+        question: {
+          id: string;
+          stem: string;
+          type: string;
+          category: string;
+          options: Array<{ id: string; optionText: string }>;
+        };
+      }>;
+    }>;
+  } | null> {
     return this.prisma.examSet.findUnique({
       where: { id: examSetId },
       select: {

@@ -46,7 +46,10 @@ export class SubmissionRepository {
     });
   }
 
-  async markSubmitted(submissionId: string, autoSubmitted: boolean) {
+  async markSubmitted(
+    submissionId: string,
+    autoSubmitted: boolean,
+  ): Promise<{ id: string; submittedAt: Date | null }> {
     return this.prisma.submission.update({
       where: { id: submissionId },
       data: {
@@ -63,7 +66,10 @@ export class SubmissionRepository {
   /**
    * Find submission by ID and userId to validate ownership
    */
-  async findSubmissionByIdAndUserId(submissionId: string, userId: string) {
+  async findSubmissionByIdAndUserId(
+    submissionId: string,
+    userId: string,
+  ): Promise<{ id: string; submittedAt: Date | null } | null> {
     return this.prisma.submission.findFirst({
       where: {
         id: submissionId,
@@ -80,7 +86,16 @@ export class SubmissionRepository {
   /**
    * Find active submissions that have expired based on exam timing
    */
-  async findExpiredActiveSubmissions() {
+  async findExpiredActiveSubmissions(): Promise<
+    Array<{
+      id: string;
+      startedAt: Date | null;
+      exam: {
+        windowStartsAt: Date | null;
+        durationSeconds: number;
+      };
+    }>
+  > {
     return this.prisma.submission.findMany({
       where: {
         submittedAt: null,
