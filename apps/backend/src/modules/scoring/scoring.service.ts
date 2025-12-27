@@ -151,7 +151,12 @@ export class ScoringService {
       const question = questions.find((q) => q.id === score.questionId);
 
       if (!question) {
-        throw new Error('Question not found during scoring');
+        this.logger.error(
+          `Question ${score.questionId} not found during scoring for submission ${submissionId}`,
+        );
+        throw new Error(
+          `Question ${score.questionId} not found during scoring`,
+        );
       }
 
       return {
