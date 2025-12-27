@@ -148,7 +148,13 @@ export class ScoringRepository {
   /**
    * Fetch FinalResult for a submission (public fields only)
    */
-  async findFinalResultBySubmissionId(submissionId: string) {
+  async findFinalResultBySubmissionId(submissionId: string): Promise<{
+    totalMarks: number;
+    aptitudeMarks: number;
+    technicalMarks: number;
+    selectedForNextRound: boolean;
+    rank: number | null;
+  } | null> {
     return this.prisma.finalResult.findUnique({
       where: { submissionId },
       select: {
@@ -169,7 +175,19 @@ export class ScoringRepository {
     totalMarks: number;
     aptitudeMarks: number;
     technicalMarks: number;
-  }) {
+  }): Promise<{
+    id: string;
+    submissionId: string;
+    totalMarks: number;
+    aptitudeMarks: number;
+    technicalMarks: number;
+    tabSwitchCount: number;
+    screenshotTaken: boolean;
+    kicked: boolean;
+    selectedForNextRound: boolean;
+    rank: number | null;
+    createdAt: Date;
+  }> {
     return this.prisma.finalResult.create({
       data: {
         submissionId: data.submissionId,
@@ -239,7 +257,17 @@ export class ScoringRepository {
   /**
    * Find all final results for an exam, ordered by ranking criteria
    */
-  async findResultsForExamRanking(examId: string) {
+  async findResultsForExamRanking(examId: string): Promise<
+    Array<{
+      id: string;
+      submissionId: string;
+      totalMarks: number;
+      technicalMarks: number;
+      submission: {
+        submittedAt: Date | null;
+      };
+    }>
+  > {
     return this.prisma.finalResult.findMany({
       where: {
         submission: {
@@ -263,9 +291,81 @@ export class ScoringRepository {
   }
 
   /**
+   * Find results for exam ranking in batches
+   * Returns batch of results with consistent ordering
+   */
+  async findResultsForExamRankingBatch(
+    examId: string,
+    skip: number,
+    take: number,
+  ): Promise<
+    Array<{
+      id: string;
+      submissionId: string;
+      totalMarks: number;
+      technicalMarks: number;
+      submission: {
+        submittedAt: Date | null;
+      };
+    }>
+  > {
+    return this.prisma.finalResult.findMany({
+      where: {
+        submission: {
+          examId,
+          deletedAt: null,
+        },
+      },
+      select: {
+        id: true,
+        submissionId: true,
+        totalMarks: true,
+        technicalMarks: true,
+        submission: {
+          select: {
+            submittedAt: true,
+          },
+        },
+      },
+      orderBy: [{ totalMarks: 'desc' }, { technicalMarks: 'desc' }],
+      skip,
+      take,
+    });
+  }
+
+  /**
+   * Count total results for an exam
+   */
+  async countResultsForExamRanking(examId: string): Promise<number> {
+    return this.prisma.finalResult.count({
+      where: {
+        submission: {
+          examId,
+          deletedAt: null,
+        },
+      },
+    });
+  }
+
+  /**
    * Update rank for a final result
    */
-  async updateRank(finalResultId: string, rank: number) {
+  async updateRank(
+    finalResultId: string,
+    rank: number,
+  ): Promise<{
+    id: string;
+    submissionId: string;
+    totalMarks: number;
+    aptitudeMarks: number;
+    technicalMarks: number;
+    tabSwitchCount: number;
+    screenshotTaken: boolean;
+    kicked: boolean;
+    selectedForNextRound: boolean;
+    rank: number | null;
+    createdAt: Date;
+  }> {
     return this.prisma.finalResult.update({
       where: { id: finalResultId },
       data: { rank } as Prisma.FinalResultUncheckedUpdateInput,
@@ -277,7 +377,21 @@ export class ScoringRepository {
    */
   async updateRanksBatch(
     updates: Array<{ finalResultId: string; rank: number }>,
-  ) {
+  ): Promise<
+    Array<{
+      id: string;
+      submissionId: string;
+      totalMarks: number;
+      aptitudeMarks: number;
+      technicalMarks: number;
+      tabSwitchCount: number;
+      screenshotTaken: boolean;
+      kicked: boolean;
+      selectedForNextRound: boolean;
+      rank: number | null;
+      createdAt: Date;
+    }>
+  > {
     return this.prisma.$transaction(
       updates.map((update) =>
         this.prisma.finalResult.update({

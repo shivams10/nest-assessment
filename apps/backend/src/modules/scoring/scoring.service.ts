@@ -53,7 +53,13 @@ export class ScoringService {
   /**
    * Get final result for a submission (public fields only)
    */
-  async getFinalResultForSubmission(submissionId: string) {
+  async getFinalResultForSubmission(submissionId: string): Promise<{
+    totalMarks: number;
+    aptitudeMarks: number;
+    technicalMarks: number;
+    selectedForNextRound: boolean;
+    rank: number | null;
+  } | null> {
     return this.repository.findFinalResultBySubmissionId(submissionId);
   }
 
@@ -76,64 +82,120 @@ export class ScoringService {
    * - Tie-breaker 1: technicalMarks (descending)
    * - Tie-breaker 2: earlier submittedAt (ascending)
    * - Safe to re-run (idempotent)
+   * - Processes in batches to prevent memory overload
    */
   async calculateRanksForExam(examId: string): Promise<void> {
-    const results = await this.repository.findResultsForExamRanking(examId);
+    const BATCH_SIZE = 1000;
+    const totalCount = await this.repository.countResultsForExamRanking(examId);
 
-    if (results.length === 0) {
+    if (totalCount === 0) {
       this.logger.log(`No results found for exam ${examId}`);
       return;
     }
 
-    // Results are already sorted by totalMarks and technicalMarks from DB
-    // Sort by submittedAt as tie-breaker (earlier = better rank) when marks are equal
-    const sortedResults = [...results].sort((a, b) => {
-      // If marks are equal, use submittedAt as tie-breaker
-      if (
-        a.totalMarks === b.totalMarks &&
-        a.technicalMarks === b.technicalMarks
-      ) {
-        const aTime = a.submission.submittedAt?.getTime() ?? Infinity;
-        const bTime = b.submission.submittedAt?.getTime() ?? Infinity;
-        return aTime - bTime; // Earlier submission gets better rank
-      }
-      // Otherwise maintain DB sort order
-      return 0;
-    });
+    this.logger.log(
+      `Starting rank calculation for exam ${examId}: ${totalCount} results to process`,
+    );
 
-    // Calculate ranks based on sorted order
-    const updates: Array<{ finalResultId: string; rank: number }> = [];
     let currentRank = 1;
+    let skip = 0;
+    let previousResult: {
+      totalMarks: number;
+      technicalMarks: number;
+      submittedAt: Date | null;
+    } | null = null;
 
-    for (let i = 0; i < sortedResults.length; i++) {
-      const result = sortedResults[i];
+    while (skip < totalCount) {
+      const batch = await this.repository.findResultsForExamRankingBatch(
+        examId,
+        skip,
+        BATCH_SIZE,
+      );
 
-      // If this result is different from previous, update rank
-      if (i > 0) {
-        const prev = sortedResults[i - 1];
-        const prevTime = prev.submission.submittedAt?.getTime() ?? Infinity;
-        const currTime = result.submission.submittedAt?.getTime() ?? Infinity;
-
-        const isSame =
-          prev.totalMarks === result.totalMarks &&
-          prev.technicalMarks === result.technicalMarks &&
-          prevTime === currTime;
-
-        if (!isSame) {
-          currentRank = i + 1;
-        }
+      if (batch.length === 0) {
+        break;
       }
 
-      updates.push({
-        finalResultId: result.id,
-        rank: currentRank,
+      // Sort batch by submittedAt as tie-breaker when marks are equal
+      const sortedBatch = [...batch].sort((a, b) => {
+        // If marks are equal, use submittedAt as tie-breaker
+        if (
+          a.totalMarks === b.totalMarks &&
+          a.technicalMarks === b.technicalMarks
+        ) {
+          const aTime = a.submission.submittedAt?.getTime() ?? Infinity;
+          const bTime = b.submission.submittedAt?.getTime() ?? Infinity;
+          return aTime - bTime; // Earlier submission gets better rank
+        }
+        // Otherwise maintain DB sort order
+        return 0;
       });
+
+      const updates: Array<{ finalResultId: string; rank: number }> = [];
+
+      for (let i = 0; i < sortedBatch.length; i++) {
+        const result = sortedBatch[i];
+        const resultTime = result.submission.submittedAt?.getTime() ?? Infinity;
+
+        // Determine if this result should have the same rank as previous
+        if (i === 0 && previousResult !== null) {
+          // Check if first result of batch ties with last result of previous batch
+          const prevTime = previousResult.submittedAt?.getTime() ?? Infinity;
+          const isSame =
+            previousResult.totalMarks === result.totalMarks &&
+            previousResult.technicalMarks === result.technicalMarks &&
+            prevTime === resultTime;
+
+          if (!isSame) {
+            currentRank = skip + i + 1;
+          }
+          // If same, keep currentRank from previous batch
+        } else if (i > 0) {
+          // Check if this result differs from previous in batch
+          const prev = sortedBatch[i - 1];
+          const prevTime = prev.submission.submittedAt?.getTime() ?? Infinity;
+
+          const isSame =
+            prev.totalMarks === result.totalMarks &&
+            prev.technicalMarks === result.technicalMarks &&
+            prevTime === resultTime;
+
+          if (!isSame) {
+            currentRank = skip + i + 1;
+          }
+        } else {
+          // First result of first batch
+          currentRank = 1;
+        }
+
+        updates.push({
+          finalResultId: result.id,
+          rank: currentRank,
+        });
+      }
+
+      // Update ranks for this batch
+      await this.repository.updateRanksBatch(updates);
+
+      // Store last result for next batch tie-breaker check
+      if (sortedBatch.length > 0) {
+        const lastResult = sortedBatch[sortedBatch.length - 1];
+        previousResult = {
+          totalMarks: lastResult.totalMarks,
+          technicalMarks: lastResult.technicalMarks,
+          submittedAt: lastResult.submission.submittedAt,
+        };
+      }
+
+      this.logger.log(
+        `Processed batch: examId=${examId}, batch=${Math.floor(skip / BATCH_SIZE) + 1}, results=${updates.length}, rankRange=${updates[0]?.rank}-${updates[updates.length - 1]?.rank}`,
+      );
+
+      skip += BATCH_SIZE;
     }
 
-    await this.repository.updateRanksBatch(updates);
-
     this.logger.log(
-      `Calculated ranks for ${updates.length} results in exam ${examId}`,
+      `Completed rank calculation for exam ${examId}: ${totalCount} results processed`,
     );
   }
 

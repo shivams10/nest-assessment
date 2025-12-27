@@ -10,7 +10,26 @@ import { GetExamDto } from './dto/get-exam.dto';
 export class ExamRuntimeService {
   constructor(private readonly repo: ExamRuntimeRepository) {}
 
-  async getExam(dto: GetExamDto, userId: string) {
+  async getExam(
+    dto: GetExamDto,
+    userId: string,
+  ): Promise<{
+    submissionId: string;
+    examSetId: string;
+    examSetName: string;
+    startedAt: Date | null;
+    sections: Array<{
+      id: string;
+      type: string;
+      questions: Array<{
+        id: string;
+        stem: string;
+        type: string;
+        category: string;
+        options: Array<{ id: string; optionText: string }>;
+      }>;
+    }>;
+  }> {
     // 1. Validate submission ownership
     const submission = await this.repo.findSubmission(dto.submissionId, userId);
 

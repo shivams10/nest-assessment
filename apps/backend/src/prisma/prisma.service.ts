@@ -7,9 +7,11 @@ import { ConfigService } from '@config/config.service';
 @Injectable()
 export class PrismaService extends PrismaClient {
   constructor(private readonly configService: ConfigService) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const pool = new Pool({
       connectionString: configService.databaseUrl,
+      max: 20, // Maximum pool size
+      min: 5, // Minimum pool size
+      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
     });
 
     super(

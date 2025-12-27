@@ -12,7 +12,10 @@ export class ExamAnswerService {
     private readonly submissionTime: SubmissionTimeService,
   ) {}
 
-  async submitAnswers(dto: SubmitAnswersDto, userId: string) {
+  async submitAnswers(
+    dto: SubmitAnswersDto,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     await this.submissionTime.assertSubmissionActive(dto.submissionId);
 
     const submission = await this.repo.findSubmission(dto.submissionId, userId);

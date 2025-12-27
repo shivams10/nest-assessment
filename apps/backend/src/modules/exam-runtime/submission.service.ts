@@ -22,7 +22,10 @@ export class SubmissionService {
    * - Uses submittedAt as guard (only active submissions)
    * - Triggers scoring (idempotent via ScoringService)
    */
-  async submitManually(submissionId: string, userId: string) {
+  async submitManually(
+    submissionId: string,
+    userId: string,
+  ): Promise<{ submissionId: string; submittedAt: Date | null }> {
     const submission =
       await this.submissionRepository.findActiveSubmission(submissionId);
 
@@ -59,7 +62,7 @@ export class SubmissionService {
    * - Uses submittedAt as guard (only active submissions)
    * - Triggers scoring (idempotent via ScoringService)
    */
-  async autoSubmit(submissionId: string, userId?: string) {
+  async autoSubmit(submissionId: string, userId?: string): Promise<void> {
     const submission =
       await this.submissionRepository.findActiveSubmission(submissionId);
 
@@ -89,7 +92,15 @@ export class SubmissionService {
    * - Validates submission ownership
    * - Only returns public result fields
    */
-  async getResult(submissionId: string, userId: string) {
+  async getResult(
+    submissionId: string,
+    userId: string,
+  ): Promise<{
+    totalMarks: number;
+    aptitudeMarks: number;
+    technicalMarks: number;
+    selectedForNextRound: boolean;
+  }> {
     const submission =
       await this.submissionRepository.findSubmissionByIdAndUserId(
         submissionId,

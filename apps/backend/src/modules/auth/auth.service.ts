@@ -69,13 +69,13 @@ export class AuthService {
 
     const accessTokenOptions: JwtSignOptions = {
       secret: this.configService.jwtAccessSecret,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       expiresIn: this.configService.jwtAccessExpiresIn,
     };
 
     const refreshTokenOptions: JwtSignOptions = {
       secret: this.configService.jwtRefreshSecret,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       expiresIn: this.configService.jwtRefreshExpiresIn,
     };
 

@@ -5,7 +5,10 @@ import { PrismaService } from '@prisma/prisma.service';
 export class ExamAnswerRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findSubmission(submissionId: string, userId: string) {
+  findSubmission(
+    submissionId: string,
+    userId: string,
+  ): Promise<{ id: string } | null> {
     return this.prisma.submission.findFirst({
       where: {
         id: submissionId,
@@ -17,7 +20,16 @@ export class ExamAnswerRepository {
     });
   }
 
-  async upsertSubmissionScore(submissionId: string, questionId: string) {
+  async upsertSubmissionScore(
+    submissionId: string,
+    questionId: string,
+  ): Promise<{
+    id: string;
+    submissionId: string;
+    questionId: string;
+    marksObtained: number;
+    answeredAt: Date | null;
+  }> {
     return this.prisma.submissionScore.upsert({
       where: {
         submissionId_questionId: {
@@ -37,13 +49,16 @@ export class ExamAnswerRepository {
     });
   }
 
-  deleteAnswers(submissionScoreId: string) {
+  deleteAnswers(submissionScoreId: string): Promise<{ count: number }> {
     return this.prisma.submissionAnswer.deleteMany({
       where: { submissionScoreId },
     });
   }
 
-  insertAnswers(submissionScoreId: string, optionIds: string[]) {
+  insertAnswers(
+    submissionScoreId: string,
+    optionIds: string[],
+  ): Promise<{ count: number }> {
     return this.prisma.submissionAnswer.createMany({
       data: optionIds.map((id) => ({
         submissionScoreId,

@@ -6,7 +6,18 @@ import { StartExamDto } from './dto/start-exam.dto';
 export class ExamAttemptsService {
   constructor(private readonly repo: ExamAttemptsRepository) {}
 
-  async startExam(dto: StartExamDto, userId: string) {
+  async startExam(
+    dto: StartExamDto,
+    userId: string,
+  ): Promise<{
+    id: string;
+    examId: string;
+    examSetId: string;
+    startedAt: Date | null;
+    submittedAt: Date | null;
+    autoSubmitted: boolean;
+    createdAt: Date;
+  }> {
     // 1. Prevent multiple attempts
     const existing = await this.repo.findExistingAttempt(dto.examId, userId);
 

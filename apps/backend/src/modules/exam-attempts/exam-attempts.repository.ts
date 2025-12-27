@@ -15,7 +15,18 @@ const SUBMISSION_PUBLIC_SELECT = {
 export class ExamAttemptsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findExistingAttempt(examId: string, userId: string) {
+  findExistingAttempt(
+    examId: string,
+    userId: string,
+  ): Promise<{
+    id: string;
+    examId: string;
+    examSetId: string;
+    startedAt: Date | null;
+    submittedAt: Date | null;
+    autoSubmitted: boolean;
+    createdAt: Date;
+  } | null> {
     return this.prisma.submission.findFirst({
       where: {
         examId,
@@ -26,7 +37,19 @@ export class ExamAttemptsRepository {
     });
   }
 
-  createAttempt(examId: string, userId: string, examSetId: string) {
+  createAttempt(
+    examId: string,
+    userId: string,
+    examSetId: string,
+  ): Promise<{
+    id: string;
+    examId: string;
+    examSetId: string;
+    startedAt: Date | null;
+    submittedAt: Date | null;
+    autoSubmitted: boolean;
+    createdAt: Date;
+  }> {
     return this.prisma.submission.create({
       data: {
         examId,
@@ -38,7 +61,7 @@ export class ExamAttemptsRepository {
     });
   }
 
-  findExamSets(examId: string) {
+  findExamSets(examId: string): Promise<Array<{ id: string }>> {
     return this.prisma.examSet.findMany({
       where: { examId },
       select: { id: true },
