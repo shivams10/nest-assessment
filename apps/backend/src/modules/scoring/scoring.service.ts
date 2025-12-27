@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ScoringRepository, ResultForAdmin } from './scoring.repository';
 import { ScoringContext, QuestionWithAnswers } from './scoring.types';
 import { QuestionCategory, QuestionType } from '@prisma/client';
@@ -151,11 +155,10 @@ export class ScoringService {
       const question = questions.find((q) => q.id === score.questionId);
 
       if (!question) {
-        this.logger.error(
-          `Question ${score.questionId} not found during scoring for submission ${submissionId}`,
-        );
-        throw new Error(
-          `Question ${score.questionId} not found during scoring`,
+        const errorMessage = `Question ${score.questionId} not found during scoring for submission ${submissionId}`;
+        this.logger.error(errorMessage);
+        throw new InternalServerErrorException(
+          'Failed to load question data during scoring',
         );
       }
 

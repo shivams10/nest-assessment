@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { parseCandidateCsv } from './utils/csv-parser.util';
@@ -19,13 +24,27 @@ export class BulkUploadService {
     uploadedBy: string,
   ) {
     if (!(buffer instanceof Buffer)) {
+      this.logger.error(
+        `Invalid CSV file buffer provided: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}`,
+      );
       throw new BadRequestException('Invalid CSV file buffer');
     }
 
-    const rows = parseCandidateCsv(buffer);
+    let rows: ReturnType<typeof parseCandidateCsv>;
+    try {
+      rows = parseCandidateCsv(buffer);
+    } catch (error) {
+      this.logger.error(
+        `CSV parsing failed: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, error=${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      throw new BadRequestException('Failed to parse CSV file');
+    }
 
     if (!rows.length) {
-      throw new BadRequestException('CSV is empty');
+      this.logger.warn(
+        `Empty CSV file provided: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}`,
+      );
+      throw new BadRequestException('CSV file is empty');
     }
 
     this.logger.log(
@@ -49,20 +68,29 @@ export class BulkUploadService {
     const batches = chunkArray(valid, this.BATCH_SIZE);
     let insertedCount = 0;
 
-    for (const batch of batches) {
-      const result = await this.prisma.user.createMany({
-        data: batch.map((row) => ({
-          email: row.email,
-          firstName: row.firstName,
-          lastName: row.lastName,
-          role: UserRole.candidate,
-          collegeSessionId,
-          passwordHash: null,
-        })),
-        skipDuplicates: true,
-      });
+    try {
+      for (const batch of batches) {
+        const result = await this.prisma.user.createMany({
+          data: batch.map((row) => ({
+            email: row.email,
+            firstName: row.firstName,
+            lastName: row.lastName,
+            role: UserRole.candidate,
+            collegeSessionId,
+            passwordHash: null,
+          })),
+          skipDuplicates: true,
+        });
 
-      insertedCount += result.count;
+        insertedCount += result.count;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Database error during bulk insert: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, error=${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to insert candidates into database',
+      );
     }
 
     if (valid.length > insertedCount) {
@@ -74,21 +102,37 @@ export class BulkUploadService {
     let errorCsvUrl: string | null = null;
 
     if (failed.length) {
-      const csvBuffer = generateErrorCsv(failed);
-      errorCsvUrl = await saveErrorCsv(csvBuffer);
+      try {
+        const csvBuffer = generateErrorCsv(failed);
+        errorCsvUrl = await saveErrorCsv(csvBuffer);
+      } catch (error) {
+        this.logger.error(
+          `Failed to save error CSV: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, error=${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        // Continue without error CSV - don't fail the entire operation
+      }
     }
 
-    await this.prisma.bulkUpload.create({
-      data: {
-        fileUrl: 'uploaded',
-        errorCsvUrl,
-        totalRows: rows.length,
-        successCount: insertedCount,
-        failedCount: failed.length,
-        collegeSessionId,
-        uploadedBy,
-      },
-    });
+    try {
+      await this.prisma.bulkUpload.create({
+        data: {
+          fileUrl: 'uploaded',
+          errorCsvUrl,
+          totalRows: rows.length,
+          successCount: insertedCount,
+          failedCount: failed.length,
+          collegeSessionId,
+          uploadedBy,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to create bulk upload record: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, error=${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to record bulk upload operation',
+      );
+    }
 
     this.logger.log(
       `Bulk upload completed: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, total=${rows.length}, success=${insertedCount}, failed=${failed.length}`,
