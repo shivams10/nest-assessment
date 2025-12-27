@@ -53,6 +53,52 @@ export class SubmissionRepository {
         submittedAt: new Date(),
         autoSubmitted,
       },
+      select: {
+        id: true,
+        submittedAt: true,
+      },
+    });
+  }
+
+  /**
+   * Find submission by ID and userId to validate ownership
+   */
+  async findSubmissionByIdAndUserId(submissionId: string, userId: string) {
+    return this.prisma.submission.findFirst({
+      where: {
+        id: submissionId,
+        userId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        submittedAt: true,
+      },
+    });
+  }
+
+  /**
+   * Find active submissions that have expired based on exam timing
+   */
+  async findExpiredActiveSubmissions() {
+    return this.prisma.submission.findMany({
+      where: {
+        submittedAt: null,
+        deletedAt: null,
+        exam: {
+          durationSeconds: { gt: 0 },
+        },
+      },
+      select: {
+        id: true,
+        startedAt: true,
+        exam: {
+          select: {
+            windowStartsAt: true,
+            durationSeconds: true,
+          },
+        },
+      },
     });
   }
 }

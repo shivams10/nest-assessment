@@ -51,4 +51,71 @@ export class ExamAnswerRepository {
       })),
     });
   }
+
+  /**
+   * Batch upsert submission scores in a transaction
+   */
+  async batchUpsertScores(
+    submissionId: string,
+    questionIds: string[],
+  ): Promise<Map<string, string>> {
+    // Use transaction to ensure atomicity
+    const results = await this.prisma.$transaction(
+      questionIds.map((questionId) =>
+        this.prisma.submissionScore.upsert({
+          where: {
+            submissionId_questionId: {
+              submissionId,
+              questionId,
+            },
+          },
+          create: {
+            submissionId,
+            questionId,
+            marksObtained: 0,
+            answeredAt: new Date(),
+          },
+          update: {
+            answeredAt: new Date(),
+          },
+          select: {
+            id: true,
+            questionId: true,
+          },
+        }),
+      ),
+    );
+
+    // Return map of questionId -> submissionScoreId
+    return new Map(results.map((r) => [r.questionId, r.id]));
+  }
+
+  /**
+   * Batch delete and insert answers in a transaction
+   */
+  async batchUpdateAnswers(
+    updates: Array<{ submissionScoreId: string; optionIds: string[] }>,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      // Delete all existing answers for these scores
+      const scoreIds = updates.map((u) => u.submissionScoreId);
+      await tx.submissionAnswer.deleteMany({
+        where: { submissionScoreId: { in: scoreIds } },
+      });
+
+      // Insert all new answers
+      const allAnswers = updates.flatMap((update) =>
+        update.optionIds.map((optionId) => ({
+          submissionScoreId: update.submissionScoreId,
+          selectedOptionId: optionId,
+        })),
+      );
+
+      if (allAnswers.length > 0) {
+        await tx.submissionAnswer.createMany({
+          data: allAnswers,
+        });
+      }
+    });
+  }
 }
