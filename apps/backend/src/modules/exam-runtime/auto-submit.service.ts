@@ -63,9 +63,14 @@ export class AutoSubmitService {
         this.logger.log(`Auto-submitted expired submission ${submission.id}`);
       } catch (error) {
         errors++;
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
         this.logger.error(
-          `Failed to auto-submit submission ${submission.id}: ${error}`,
+          `Failed to auto-submit submission ${submission.id}: ${errorMessage}`,
+          errorStack,
         );
+        // Continue processing other submissions - don't fail entire batch
       }
     }
 
