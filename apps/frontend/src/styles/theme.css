@@ -1,0 +1,71 @@
+/**
+ * Theme CSS Variables
+ * All colors are defined here using CSS variables for easy theming
+ * Light mode (default) and dark mode variants are supported
+ */
+
+:root {
+  /* Base Colors - Light Mode */
+  --background: 0 100% 98%;
+  --surface: 0 0% 100%;
+  --foreground: 230 40% 30%;
+
+  /* Primary Colors - Light Mode */
+  --primary: 230 44% 63%;
+  --primary-foreground: 0 0% 100%;
+  --primary-muted: 230 50% 77%;
+
+  /* Semantic Colors - Light Mode */
+  --card: 0 0% 100%;
+  --card-foreground: 230 40% 30%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 230 40% 30%;
+  --secondary: 230 50% 90%;
+  --secondary-foreground: 230 40% 30%;
+  --muted: 0 100% 97%;
+  --muted-foreground: 230 40% 50%;
+  --accent: 230 50% 90%;
+  --accent-foreground: 230 40% 30%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Border & Input - Light Mode */
+  --border: 230 30% 85%;
+  --input: 230 30% 85%;
+  --ring: 230 44% 63%;
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Base Colors - Dark Mode (prepared for future implementation) */
+  --background: 230 40% 10%;
+  --surface: 230 40% 15%;
+  --foreground: 230 30% 90%;
+
+  /* Primary Colors - Dark Mode */
+  --primary: 230 44% 63%;
+  --primary-foreground: 230 40% 10%;
+  --primary-muted: 230 40% 50%;
+
+  /* Semantic Colors - Dark Mode */
+  --card: 230 40% 15%;
+  --card-foreground: 230 30% 90%;
+  --popover: 230 40% 15%;
+  --popover-foreground: 230 30% 90%;
+  --secondary: 230 40% 20%;
+  --secondary-foreground: 230 30% 90%;
+  --muted: 230 40% 20%;
+  --muted-foreground: 230 30% 70%;
+  --accent: 230 40% 20%;
+  --accent-foreground: 230 30% 90%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 230 30% 90%;
+
+  /* Border & Input - Dark Mode */
+  --border: 230 40% 25%;
+  --input: 230 40% 25%;
+  --ring: 230 44% 63%;
+}
+
