@@ -45,4 +45,14 @@ export class SubmissionRepository {
       },
     });
   }
+
+  async markSubmitted(submissionId: string, autoSubmitted: boolean) {
+    return this.prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        submittedAt: new Date(),
+        autoSubmitted,
+      },
+    });
+  }
 }

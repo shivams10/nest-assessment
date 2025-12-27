@@ -1,15 +1,14 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { SubmissionRepository } from './submission.repository';
+import { ScoringService } from '../scoring/scoring.service';
 
 @Injectable()
 export class SubmissionService {
-  constructor(private readonly submissionRepository: SubmissionRepository) {}
+  constructor(
+    private readonly submissionRepository: SubmissionRepository,
+    private readonly scoringService: ScoringService,
+  ) {}
 
-  /**
-   * Manual submission by candidate
-   * - Validates ownership
-   * - Prevents double submission
-   */
   async submitManually(submissionId: string, userId: string) {
     const submission =
       await this.submissionRepository.findActiveSubmission(submissionId);
@@ -22,6 +21,18 @@ export class SubmissionService {
       throw new ForbiddenException('Not allowed to submit this exam');
     }
 
-    return this.submissionRepository.autoSubmit(submissionId);
+    const updatedSubmission = await this.submissionRepository.markSubmitted(
+      submissionId,
+      false, // autoSubmitted = false
+    );
+
+    await this.scoringService.scoreSubmission({
+      submissionId: updatedSubmission.id,
+    });
+
+    return {
+      submissionId: updatedSubmission.id,
+      submittedAt: updatedSubmission.submittedAt,
+    };
   }
 }
