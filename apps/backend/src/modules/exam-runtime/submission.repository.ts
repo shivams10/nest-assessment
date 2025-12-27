@@ -53,6 +53,10 @@ export class SubmissionRepository {
         submittedAt: new Date(),
         autoSubmitted,
       },
+      select: {
+        id: true,
+        submittedAt: true,
+      },
     });
   }
 

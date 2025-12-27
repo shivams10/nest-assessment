@@ -2,12 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
+const EXAM_PUBLIC_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  windowStartsAt: true,
+  windowEndsAt: true,
+  durationSeconds: true,
+  isPublished: true,
+  createdAt: true,
+} as const;
+
+const EXAM_ADMIN_SELECT = {
+  ...EXAM_PUBLIC_SELECT,
+  collegeSessionId: true,
+} as const;
+
 @Injectable()
 export class ExamRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Fetch a single exam (excluding soft-deleted)
+   * Returns full entity for internal use (includes masterPasswordHash)
    */
   findById(id: string) {
     return this.prisma.exam.findFirst({
@@ -31,6 +48,7 @@ export class ExamRepository {
       orderBy: {
         createdAt: 'desc',
       },
+      select: EXAM_PUBLIC_SELECT,
     });
   }
 
@@ -41,6 +59,7 @@ export class ExamRepository {
     return this.prisma.exam.update({
       where: { id: examId },
       data: { isPublished: true },
+      select: EXAM_ADMIN_SELECT,
     });
   }
 
@@ -57,16 +76,7 @@ export class ExamRepository {
   create(data: Prisma.ExamCreateInput) {
     return this.prisma.exam.create({
       data,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        windowStartsAt: true,
-        windowEndsAt: true,
-        durationSeconds: true,
-        isPublished: true,
-        createdAt: true,
-      },
+      select: EXAM_ADMIN_SELECT,
     });
   }
 
@@ -90,15 +100,7 @@ export class ExamRepository {
         orderBy: { createdAt: 'desc' },
         skip,
         take,
-        select: {
-          id: true,
-          title: true,
-          isPublished: true,
-          windowStartsAt: true,
-          windowEndsAt: true,
-          durationSeconds: true,
-          createdAt: true,
-        },
+        select: EXAM_ADMIN_SELECT,
       }),
       this.prisma.exam.count({ where }),
     ]);
@@ -110,6 +112,7 @@ export class ExamRepository {
     return this.prisma.exam.update({
       where: { id },
       data: { isPublished: false },
+      select: EXAM_ADMIN_SELECT,
     });
   }
 }

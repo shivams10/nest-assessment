@@ -1,6 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 
+const SUBMISSION_PUBLIC_SELECT = {
+  id: true,
+  examId: true,
+  examSetId: true,
+  startedAt: true,
+  submittedAt: true,
+  autoSubmitted: true,
+  createdAt: true,
+} as const;
+
 @Injectable()
 export class ExamAttemptsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -12,6 +22,7 @@ export class ExamAttemptsRepository {
         userId,
         deletedAt: null,
       },
+      select: SUBMISSION_PUBLIC_SELECT,
     });
   }
 
@@ -23,6 +34,7 @@ export class ExamAttemptsRepository {
         examSetId,
         startedAt: new Date(),
       },
+      select: SUBMISSION_PUBLIC_SELECT,
     });
   }
 
