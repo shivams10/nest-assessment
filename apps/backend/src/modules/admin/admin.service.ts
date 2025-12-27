@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '@prisma/prisma.service';
@@ -15,6 +16,8 @@ import { ResultForAdmin } from '../scoring/scoring.repository';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly scoringService: ScoringService,
@@ -31,7 +34,7 @@ export class AdminService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    return this.prisma.user.create({
+    const admin = await this.prisma.user.create({
       data: {
         email: dto.email,
         firstName: dto.firstName,
@@ -41,6 +44,10 @@ export class AdminService {
       },
       select: USER_PUBLIC_SELECT,
     });
+
+    this.logger.log(`Admin created: userId=${admin.id}, email=${admin.email}`);
+
+    return admin;
   }
 
   async createModerator(dto: CreateModeratorDto) {
@@ -54,7 +61,7 @@ export class AdminService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    return this.prisma.user.create({
+    const moderator = await this.prisma.user.create({
       data: {
         email: dto.email,
         firstName: dto.firstName,
@@ -64,6 +71,12 @@ export class AdminService {
       },
       select: USER_PUBLIC_SELECT,
     });
+
+    this.logger.log(
+      `Moderator created: userId=${moderator.id}, email=${moderator.email}`,
+    );
+
+    return moderator;
   }
 
   async setUserActive(userId: string, isActive: boolean) {
@@ -75,11 +88,17 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data: { isActive },
       select: USER_PUBLIC_SELECT,
     });
+
+    this.logger.log(
+      `User status updated: userId=${userId}, isActive=${isActive}, role=${updated.role}`,
+    );
+
+    return updated;
   }
 
   async softDeleteUser(userId: string) {
@@ -91,11 +110,17 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
 
-    return this.prisma.user.update({
+    const deleted = await this.prisma.user.update({
       where: { id: userId },
       data: { deletedAt: new Date(), isActive: false },
       select: USER_PUBLIC_SELECT,
     });
+
+    this.logger.log(
+      `User soft deleted: userId=${userId}, email=${deleted.email}, role=${deleted.role}`,
+    );
+
+    return deleted;
   }
 
   async listUsers(dto: ListUsersDto) {

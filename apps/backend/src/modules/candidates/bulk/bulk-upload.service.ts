@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { parseCandidateCsv } from './utils/csv-parser.util';
@@ -8,6 +8,7 @@ import { chunkArray } from './utils/batch.util';
 
 @Injectable()
 export class BulkUploadService {
+  private readonly logger = new Logger(BulkUploadService.name);
   private readonly BATCH_SIZE = 500;
 
   constructor(private readonly prisma: PrismaService) {}
@@ -26,6 +27,10 @@ export class BulkUploadService {
     if (!rows.length) {
       throw new BadRequestException('CSV is empty');
     }
+
+    this.logger.log(
+      `Bulk upload started: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, totalRows=${rows.length}`,
+    );
 
     const valid: typeof rows = [];
     const failed: FailedCandidateRow[] = [];
@@ -84,6 +89,10 @@ export class BulkUploadService {
         uploadedBy,
       },
     });
+
+    this.logger.log(
+      `Bulk upload completed: collegeSessionId=${collegeSessionId}, uploadedBy=${uploadedBy}, total=${rows.length}, success=${insertedCount}, failed=${failed.length}`,
+    );
 
     return {
       total: rows.length,
