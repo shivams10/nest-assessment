@@ -44,5 +44,21 @@ export const TEXT = {
     PASSWORD_REQUIRED: 'Password is required',
     PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters',
   },
+
+  // Admin panel
+  ADMIN: {
+    PANEL_TITLE: 'Admin Panel',
+    LOGOUT: 'Logout',
+    USER: 'User',
+    UNAUTHORIZED_TITLE: 'Unauthorized',
+    UNAUTHORIZED_MESSAGE: 'You do not have permission to access this page.',
+    NAVIGATION: {
+      DASHBOARD: 'Dashboard',
+      EXAMS: 'Exams',
+      CANDIDATES: 'Candidates',
+      RESULTS: 'Results',
+      USERS: 'Users',
+    },
+  },
 } as const
 

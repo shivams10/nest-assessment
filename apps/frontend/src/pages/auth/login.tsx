@@ -92,12 +92,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-4xl">
-        <div className="flex flex-col md:flex-row">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-x-hidden">
+      <Card className="w-full max-w-4xl mx-auto">
+        <div className="flex flex-col md:flex-row overflow-hidden">
           {/* Google Login Section - Left */}
-          <div className="flex flex-1 flex-col items-center justify-center border-b border-border p-6 md:border-b-0 md:border-r">
-            <div className="w-full max-w-xs space-y-6">
+          <div className="flex flex-1 flex-col items-center justify-center border-b border-border p-4 sm:p-6 md:border-b-0 md:border-r min-w-0">
+            <div className="w-full max-w-xs space-y-4 sm:space-y-6">
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-bold text-foreground">{APP_NAME}</h2>
                 <p className="text-sm text-muted-foreground">{LOGIN.TITLE}</p>
@@ -139,8 +139,8 @@ export default function LoginPage() {
           </div>
 
           {/* System Login Section - Right */}
-          <div className="flex flex-1 flex-col p-6">
-            <div className="w-full max-w-xs space-y-6">
+          <div className="flex flex-1 flex-col p-4 sm:p-6 min-w-0">
+            <div className="w-full max-w-xs mx-auto space-y-4 sm:space-y-6">
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-foreground">{LOGIN.SYSTEM_LOGIN_TITLE}</h2>
               </div>
