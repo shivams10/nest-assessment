@@ -30,16 +30,25 @@ export class ExamService {
   }
 
   /**
-   * Publish an exam after validation
+   * Validate exam readiness for publishing
+   * Returns validation result with reasons
    */
-  async publishExam(examId: string) {
+  async validateExamReadiness(examId: string): Promise<{
+    isReady: boolean;
+    reasons: string[];
+  }> {
     const exam = await this.examRepository.findById(examId);
 
     if (!exam) {
-      throw new NotFoundException('Exam not found');
+      return {
+        isReady: false,
+        reasons: ['Exam not found'],
+      };
     }
 
-    // Validate exam readiness
+    const reasons: string[] = [];
+
+    // Validate exam sets
     const examSets = await this.prisma.examSet.findMany({
       where: { examId },
       include: {
@@ -52,11 +61,11 @@ export class ExamService {
     });
 
     if (examSets.length === 0) {
-      throw new BadRequestException(
-        'Cannot publish exam: At least one exam set is required',
-      );
+      reasons.push('At least one exam set is required');
+      return { isReady: false, reasons };
     }
 
+    // Validate each exam set
     for (const examSet of examSets) {
       const aptitudeSection = examSet.sections.find(
         (s) => s.sectionType === 'aptitude',
@@ -66,30 +75,57 @@ export class ExamService {
       );
 
       if (!aptitudeSection) {
-        throw new BadRequestException(
-          `Cannot publish exam: Exam set "${examSet.name}" is missing aptitude section`,
+        reasons.push(
+          `Exam set "${examSet.name}" is missing aptitude section`,
         );
+      } else {
+        const aptitudeAssignedCount = aptitudeSection.questions.length;
+        if (aptitudeAssignedCount < aptitudeSection.questionCount) {
+          reasons.push(
+            `Exam set "${examSet.name}" aptitude section requires ${aptitudeSection.questionCount} questions but only ${aptitudeAssignedCount} are assigned`,
+          );
+        }
       }
 
       if (!technicalSection) {
-        throw new BadRequestException(
-          `Cannot publish exam: Exam set "${examSet.name}" is missing technical section`,
+        reasons.push(
+          `Exam set "${examSet.name}" is missing technical section`,
         );
+      } else {
+        const technicalAssignedCount = technicalSection.questions.length;
+        if (technicalAssignedCount < technicalSection.questionCount) {
+          reasons.push(
+            `Exam set "${examSet.name}" technical section requires ${technicalSection.questionCount} questions but only ${technicalAssignedCount} are assigned`,
+          );
+        }
       }
+    }
 
-      const aptitudeAssignedCount = aptitudeSection.questions.length;
-      if (aptitudeAssignedCount < aptitudeSection.questionCount) {
-        throw new BadRequestException(
-          `Cannot publish exam: Exam set "${examSet.name}" aptitude section requires ${aptitudeSection.questionCount} questions but only ${aptitudeAssignedCount} are assigned`,
-        );
-      }
+    return {
+      isReady: reasons.length === 0,
+      reasons,
+    };
+  }
 
-      const technicalAssignedCount = technicalSection.questions.length;
-      if (technicalAssignedCount < technicalSection.questionCount) {
-        throw new BadRequestException(
-          `Cannot publish exam: Exam set "${examSet.name}" technical section requires ${technicalSection.questionCount} questions but only ${technicalAssignedCount} are assigned`,
-        );
-      }
+  /**
+   * Publish an exam after validation
+   */
+  async publishExam(examId: string) {
+    const exam = await this.examRepository.findById(examId);
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    // Validate exam readiness
+    const validation = await this.validateExamReadiness(examId);
+
+    if (!validation.isReady) {
+      throw new BadRequestException({
+        code: 'EXAM_NOT_READY',
+        message: 'Exam is not ready to be published',
+        reasons: validation.reasons,
+      });
     }
 
     const updated = await this.examRepository.publish(examId);

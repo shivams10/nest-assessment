@@ -96,23 +96,9 @@ export function AdminResultsPage() {
     )
   }
 
-  if (!data || !data.items || data.items.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Results</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Manage exam results and rankings
-            </p>
-          </div>
-        </div>
-        <EmptyState description="No results found matching your criteria" />
-      </div>
-    )
-  }
-
   const { items, meta } = data || { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }
+  const hasData = items && items.length > 0
+  const hasFilters = examIdFilter || collegeSessionIdFilter || selectedForNextRoundFilter !== undefined
 
   return (
     <div className="space-y-6">
@@ -123,23 +109,25 @@ export function AdminResultsPage() {
             Manage exam results and rankings
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            // Get unique exam IDs from results
-            const examIds = [...new Set(items?.map((r) => r.examId) || [])]
-            if (examIds.length > 0) {
-              setSelectedExamId(examIds[0])
-              setShowRecalculateDialog(true)
-            } else {
-              // No exams available
-              console.warn('No exams available to recalculate ranks')
-            }
-          }}
-          disabled={recalculateRanksMutation.isPending || items.length === 0}
-        >
-          {recalculateRanksMutation.isPending ? 'Recalculating...' : 'Recalculate Rankings'}
-        </Button>
+        {hasData && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Get unique exam IDs from results
+              const examIds = [...new Set(items?.map((r) => r.examId) || [])]
+              if (examIds.length > 0) {
+                setSelectedExamId(examIds[0])
+                setShowRecalculateDialog(true)
+              } else {
+                // No exams available
+                console.warn('No exams available to recalculate ranks')
+              }
+            }}
+            disabled={recalculateRanksMutation.isPending || items.length === 0}
+          >
+            {recalculateRanksMutation.isPending ? 'Recalculating...' : 'Recalculate Rankings'}
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -259,98 +247,106 @@ export function AdminResultsPage() {
         </CardContent>
       </Card>
 
-      {/* Results Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Candidate</TableHead>
-                  <TableHead>Exam</TableHead>
-                  <TableHead>Total Marks</TableHead>
-                  <TableHead>Aptitude</TableHead>
-                  <TableHead>Technical</TableHead>
-                  <TableHead>Rank</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((result) => (
-                  <TableRow key={result.submissionId}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium">
-                          {result.candidate?.firstName && result.candidate?.lastName
-                            ? `${result.candidate.firstName} ${result.candidate.lastName}`
-                            : result.candidate?.email || 'N/A'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {result.candidate?.email || 'N/A'}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm">{result.examTitle}</p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-semibold">{result.totalMarks}</p>
-                    </TableCell>
-                    <TableCell>{result.aptitudeMarks}</TableCell>
-                    <TableCell>{result.technicalMarks}</TableCell>
-                    <TableCell>
-                      <RankBadge rank={result.rank} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge selected={result.selectedForNextRound} />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleToggleSelection(
-                            result.submissionId,
-                            result.selectedForNextRound,
-                          )
-                        }
-                        disabled={toggleNextRoundMutation.isPending}
-                      >
-                        {result.selectedForNextRound ? 'Deselect' : 'Select'}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {hasData ? (
+        <>
+          {/* Results Table */}
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Candidate</TableHead>
+                      <TableHead>Exam</TableHead>
+                      <TableHead>Total Marks</TableHead>
+                      <TableHead>Aptitude</TableHead>
+                      <TableHead>Technical</TableHead>
+                      <TableHead>Rank</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((result) => (
+                      <TableRow key={result.submissionId}>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium">
+                              {result.candidate?.firstName && result.candidate?.lastName
+                                ? `${result.candidate.firstName} ${result.candidate.lastName}`
+                                : result.candidate?.email || 'N/A'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {result.candidate?.email || 'N/A'}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{result.examTitle || 'N/A'}</TableCell>
+                        <TableCell>{result.totalMarks ?? 'N/A'}</TableCell>
+                        <TableCell>{result.aptitudeMarks ?? 'N/A'}</TableCell>
+                        <TableCell>{result.technicalMarks ?? 'N/A'}</TableCell>
+                        <TableCell>
+                          <RankBadge rank={result.rank} />
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge selected={result.selectedForNextRound} />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleToggleSelection(
+                                result.submissionId,
+                                result.selectedForNextRound,
+                              )
+                            }
+                            disabled={toggleNextRoundMutation.isPending}
+                          >
+                            {result.selectedForNextRound ? 'Deselect' : 'Select'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Pagination */}
-      {meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {meta.page} of {meta.totalPages} ({meta.total} total)
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
-            disabled={page === meta.totalPages}
-          >
-            Next
-          </Button>
-        </div>
+          {/* Pagination */}
+          {meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {meta.page} of {meta.totalPages} ({meta.total} total)
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                disabled={page === meta.totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <EmptyState
+          description={
+            hasFilters
+              ? 'No results found matching your filters. Try adjusting your search criteria.'
+              : 'No results found.'
+          }
+        />
       )}
 
       {/* Recalculate Ranks Dialog */}

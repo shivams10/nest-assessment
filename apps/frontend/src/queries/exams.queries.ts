@@ -13,6 +13,7 @@ import {
   getExamService,
   updateExamService,
   deleteExamService,
+  getExamReadinessService,
 } from '@/api/exams.api'
 import type {
   Exam,
@@ -41,6 +42,19 @@ export function useAdminExams(params?: ListExamsParams) {
     queryFn: () => listExamsService(params),
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+/**
+ * useExamReadiness - Fetch exam readiness status
+ */
+export function useExamReadiness(examId: string | undefined) {
+  return useQuery<{ isReady: boolean; reasons: string[] }, Error>({
+    queryKey: [...examsKeys.detail(examId || ''), 'readiness'],
+    queryFn: () => getExamReadinessService(examId!),
+    enabled: !!examId,
+    staleTime: 10 * 1000, // 10 seconds - refresh frequently
+    gcTime: 1 * 60 * 1000, // 1 minute
   })
 }
 

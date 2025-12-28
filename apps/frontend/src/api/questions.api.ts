@@ -89,6 +89,50 @@ export async function getSectionQuestionsService(
 }
 
 /**
+ * Update question
+ * PATCH /admin/questions/:id
+ */
+export async function updateQuestionService(
+  id: string,
+  data: Partial<CreateQuestionRequest>,
+): Promise<Question> {
+  try {
+    const response = await apiClient.patch<Question>(`/admin/questions/${id}`, data)
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to update question'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
+ * Delete question
+ * DELETE /admin/questions/:id
+ */
+export async function deleteQuestionService(id: string): Promise<void> {
+  try {
+    await apiClient.delete(`/admin/questions/${id}`)
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to delete question'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
  * Assign questions to section
  * POST /exam-set-questions
  */

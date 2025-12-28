@@ -19,7 +19,7 @@ export interface ExamSetSection {
   questionCount: number
   examSetId: string
   createdAt: string
-  assignedQuestions?: number
+  assignedQuestionsCount?: number
 }
 
 export interface CreateExamSetRequest {

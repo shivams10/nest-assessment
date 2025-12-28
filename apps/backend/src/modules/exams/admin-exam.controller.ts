@@ -39,6 +39,11 @@ export class AdminExamController {
     return this.examService.findByIdForAdmin(id);
   }
 
+  @Get(':id/readiness')
+  getReadiness(@Param('id') id: string) {
+    return this.examService.validateExamReadiness(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateExamDto) {
     return this.examService.updateExam(id, dto);

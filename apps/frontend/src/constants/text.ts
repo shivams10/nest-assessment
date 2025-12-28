@@ -59,6 +59,8 @@ export const TEXT = {
       RESULTS: 'Results',
       ANALYTICS: 'Analytics',
       SESSIONS: 'Sessions',
+      QUESTIONS: 'Questions',
+      BULK_UPLOAD: 'Bulk Upload',
       USERS: 'Users',
     },
   },

@@ -52,6 +52,16 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
     allowedRoles: ADMIN_ROLES,
   },
   {
+    label: TEXT.ADMIN.NAVIGATION.QUESTIONS,
+    path: ROUTES.ADMIN_QUESTIONS,
+    allowedRoles: ADMIN_ROLES,
+  },
+  {
+    label: TEXT.ADMIN.NAVIGATION.BULK_UPLOAD,
+    path: ROUTES.ADMIN_BULK_UPLOAD,
+    allowedRoles: ADMIN_ROLES,
+  },
+  {
     label: TEXT.ADMIN.NAVIGATION.USERS,
     path: ROUTES.ADMIN_USERS,
     allowedRoles: [ROLES.ADMIN], // Admin only

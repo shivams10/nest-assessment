@@ -92,7 +92,11 @@ export async function createExamSetSectionService(
   data: CreateExamSetSectionRequest,
 ): Promise<ExamSetSection> {
   try {
-    const response = await apiClient.post<ExamSetSection>('/exam-sets/sections', data)
+    const response = await apiClient.post<ExamSetSection>('/exam-sets/sections', {
+      examSetId: data.examSetId,
+      sectionType: data.sectionType,
+      questionCount: data.questionCount,
+    })
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>

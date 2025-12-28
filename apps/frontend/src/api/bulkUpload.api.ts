@@ -14,7 +14,7 @@ import type {
 
 /**
  * Upload CSV file for bulk question import
- * POST /admin/bulk-upload
+ * POST /admin/questions/bulk-upload
  */
 export async function bulkUploadQuestionsService(
   data: BulkUploadRequest,
@@ -22,12 +22,9 @@ export async function bulkUploadQuestionsService(
   try {
     const formData = new FormData()
     formData.append('file', data.file)
-    if (data.collegeSessionId) {
-      formData.append('collegeSessionId', data.collegeSessionId)
-    }
 
     const response = await apiClient.post<BulkUploadResponse>(
-      '/admin/bulk-upload',
+      '/admin/questions/bulk-upload',
       formData,
       {
         headers: {
@@ -51,14 +48,14 @@ export async function bulkUploadQuestionsService(
 
 /**
  * Get bulk upload status
- * GET /admin/bulk-upload/:id/status
+ * GET /admin/questions/bulk-upload/:id/status
  */
 export async function getBulkUploadStatusService(
   uploadId: string,
 ): Promise<BulkUploadStatusResponse> {
   try {
     const response = await apiClient.get<BulkUploadStatusResponse>(
-      `/admin/bulk-upload/${uploadId}/status`,
+      `/admin/questions/bulk-upload/${uploadId}/status`,
     )
     return response.data
   } catch (error) {
@@ -68,6 +65,29 @@ export async function getBulkUploadStatusService(
       axiosError.response?.data?.error ||
       axiosError.message ||
       'Failed to fetch upload status'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
+ * Download error CSV
+ * GET /uploads/:filename
+ */
+export async function downloadErrorCsvService(url: string): Promise<Blob> {
+  try {
+    const response = await apiClient.get(url, {
+      responseType: 'blob',
+    })
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to download error CSV'
     const customError = new Error(errorMessage)
     ;(customError as unknown as { status?: number }).status = axiosError.response?.status
     throw customError

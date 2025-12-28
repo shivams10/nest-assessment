@@ -9,13 +9,7 @@ export interface BulkUploadRequest {
 }
 
 export interface BulkUploadResponse {
-  id: string
-  status: BulkUploadStatus
-  totalRows: number
-  successCount: number
-  failedCount: number
-  errorCsvUrl?: string
-  createdAt: string
+  uploadId: string
 }
 
 export type BulkUploadStatus = 'pending' | 'processing' | 'completed' | 'failed'
@@ -24,10 +18,11 @@ export interface BulkUploadStatusResponse {
   id: string
   status: BulkUploadStatus
   totalRows: number
+  processedRows: number
   successCount: number
   failedCount: number
-  errorCsvUrl?: string
-  progress?: number
-  message?: string
+  errorFileUrl: string | null
+  createdAt: string
+  updatedAt: string
 }
 
