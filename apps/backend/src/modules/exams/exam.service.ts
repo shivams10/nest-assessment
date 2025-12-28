@@ -39,6 +39,59 @@ export class ExamService {
       throw new NotFoundException('Exam not found');
     }
 
+    // Validate exam readiness
+    const examSets = await this.prisma.examSet.findMany({
+      where: { examId },
+      include: {
+        sections: {
+          include: {
+            questions: true,
+          },
+        },
+      },
+    });
+
+    if (examSets.length === 0) {
+      throw new BadRequestException(
+        'Cannot publish exam: At least one exam set is required',
+      );
+    }
+
+    for (const examSet of examSets) {
+      const aptitudeSection = examSet.sections.find(
+        (s) => s.sectionType === 'aptitude',
+      );
+      const technicalSection = examSet.sections.find(
+        (s) => s.sectionType === 'technical',
+      );
+
+      if (!aptitudeSection) {
+        throw new BadRequestException(
+          `Cannot publish exam: Exam set "${examSet.name}" is missing aptitude section`,
+        );
+      }
+
+      if (!technicalSection) {
+        throw new BadRequestException(
+          `Cannot publish exam: Exam set "${examSet.name}" is missing technical section`,
+        );
+      }
+
+      const aptitudeAssignedCount = aptitudeSection.questions.length;
+      if (aptitudeAssignedCount < aptitudeSection.questionCount) {
+        throw new BadRequestException(
+          `Cannot publish exam: Exam set "${examSet.name}" aptitude section requires ${aptitudeSection.questionCount} questions but only ${aptitudeAssignedCount} are assigned`,
+        );
+      }
+
+      const technicalAssignedCount = technicalSection.questions.length;
+      if (technicalAssignedCount < technicalSection.questionCount) {
+        throw new BadRequestException(
+          `Cannot publish exam: Exam set "${examSet.name}" technical section requires ${technicalSection.questionCount} questions but only ${technicalAssignedCount} are assigned`,
+        );
+      }
+    }
+
     const updated = await this.examRepository.publish(examId);
 
     this.logger.log(
