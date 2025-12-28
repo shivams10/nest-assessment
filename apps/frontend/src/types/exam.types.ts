@@ -17,13 +17,22 @@ export interface Exam {
 }
 
 export interface CreateExamRequest {
-  collegeSessionId: string
+  collegeSessionId?: string
   title: string
   description?: string
   windowStartsAt: string
   windowEndsAt: string
   durationSeconds: number
   masterPassword: string
+}
+
+export interface UpdateExamRequest {
+  title?: string
+  description?: string
+  windowStartsAt?: string
+  windowEndsAt?: string
+  durationSeconds?: number
+  collegeSessionId?: string
 }
 
 export interface ListExamsParams {

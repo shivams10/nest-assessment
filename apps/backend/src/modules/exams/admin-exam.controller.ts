@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -51,5 +52,10 @@ export class AdminExamController {
   @Post(':id/unpublish')
   unpublish(@Param('id') id: string) {
     return this.examService.unpublishExam(id);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.examService.deleteExam(id);
   }
 }

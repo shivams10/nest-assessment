@@ -3,7 +3,7 @@ import { useCreateSession } from '@/queries/sessions.queries'
 import { SessionForm } from './components/SessionForm'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { ROUTES } from '@/constants'
-import type { CreateSessionRequest } from '@/types/session.types'
+import type { CreateSessionRequest, UpdateSessionRequest } from '@/types/session.types'
 
 /**
  * CreateSessionPage - Page for creating a new recruitment session
@@ -13,8 +13,8 @@ export function CreateSessionPage() {
   const navigate = useNavigate()
   const createSessionMutation = useCreateSession()
 
-  const handleSubmit = (data: CreateSessionRequest) => {
-    createSessionMutation.mutate(data)
+  const handleSubmit = (data: CreateSessionRequest | UpdateSessionRequest) => {
+    createSessionMutation.mutate(data as CreateSessionRequest)
   }
 
 

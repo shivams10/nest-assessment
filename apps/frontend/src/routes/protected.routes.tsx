@@ -63,6 +63,14 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
+                path: ROUTES.ADMIN_EXAMS_EDIT,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { EditExamPage } = await import('@/pages/admin/exams/EditExamPage')
+                  return { Component: EditExamPage }
+                },
+              },
+              {
                 path: ROUTES.ADMIN_SESSIONS,
                 errorElement: <ErrorPage />,
                 lazy: async () => {
@@ -76,6 +84,14 @@ export const protectedRoutes: RouteObject[] = [
                 lazy: async () => {
                   const { CreateSessionPage } = await import('@/pages/admin/sessions/CreateSessionPage')
                   return { Component: CreateSessionPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_SESSIONS_EDIT,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { EditSessionPage } = await import('@/pages/admin/sessions/EditSessionPage')
+                  return { Component: EditSessionPage }
                 },
               },
               {

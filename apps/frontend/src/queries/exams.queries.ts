@@ -10,10 +10,14 @@ import {
   createExamService,
   publishExamService,
   unpublishExamService,
+  getExamService,
+  updateExamService,
+  deleteExamService,
 } from '@/api/exams.api'
 import type {
   Exam,
   CreateExamRequest,
+  UpdateExamRequest,
   ListExamsParams,
   ListExamsResponse,
 } from '@/types/exam.types'
@@ -25,6 +29,7 @@ import { ROUTES } from '@/constants'
 export const examsKeys = {
   all: ['exams'] as const,
   admin: (params?: ListExamsParams) => [...examsKeys.all, 'admin', params] as const,
+  detail: (id: string) => [...examsKeys.all, 'detail', id] as const,
 }
 
 /**
@@ -40,6 +45,22 @@ export function useAdminExams(params?: ListExamsParams) {
 }
 
 /**
+ * useExam - Fetch single exam by ID
+ */
+export function useExam(id: string | undefined) {
+  return useQuery<Exam, Error>({
+    queryKey: examsKeys.detail(id || ''),
+    queryFn: () => {
+      if (!id) throw new Error('Exam ID is required')
+      return getExamService(id)
+    },
+    enabled: !!id,
+    staleTime: 30 * 1000,
+    gcTime: 2 * 60 * 1000,
+  })
+}
+
+/**
  * useCreateExam - Create exam mutation
  */
 export function useCreateExam() {
@@ -51,6 +72,31 @@ export function useCreateExam() {
     onSuccess: () => {
       // Invalidate exams list
       queryClient.invalidateQueries({ queryKey: examsKeys.all })
+      // Navigate back to exams list
+      navigate(ROUTES.ADMIN_EXAMS)
+    },
+  })
+}
+
+/**
+ * useUpdateExam - Update exam mutation
+ */
+export function useUpdateExam() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation<
+    Exam,
+    Error,
+    { id: string; data: UpdateExamRequest }
+  >({
+    mutationFn: ({ id, data }) => updateExamService(id, data),
+    onSuccess: (_, variables) => {
+      // Invalidate exams list and detail
+      queryClient.invalidateQueries({ queryKey: examsKeys.all })
+      queryClient.invalidateQueries({
+        queryKey: examsKeys.detail(variables.id),
+      })
       // Navigate back to exams list
       navigate(ROUTES.ADMIN_EXAMS)
     },
@@ -154,6 +200,21 @@ export function useUnpublishExam() {
     },
     onSettled: () => {
       // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: examsKeys.all })
+    },
+  })
+}
+
+/**
+ * useDeleteExam - Delete exam mutation
+ */
+export function useDeleteExam() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, string>({
+    mutationFn: deleteExamService,
+    onSuccess: () => {
+      // Invalidate exams list
       queryClient.invalidateQueries({ queryKey: examsKeys.all })
     },
   })

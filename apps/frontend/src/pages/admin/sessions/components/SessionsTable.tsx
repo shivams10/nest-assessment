@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -6,18 +8,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import { SessionStatusBadge } from './SessionStatusBadge'
+import { SubmitDialog } from '@/pages/exam/components/SubmitDialog'
+import { ROUTES } from '@/constants'
 import type { RecruitmentSession } from '@/types/session.types'
 
 interface SessionsTableProps {
   sessions: RecruitmentSession[]
   isLoading?: boolean
+  onDelete?: (sessionId: string) => void
+  isDeleting?: boolean
 }
 
 /**
  * SessionsTable - Table component for displaying recruitment sessions
  */
-export function SessionsTable({ sessions, isLoading }: SessionsTableProps) {
+export function SessionsTable({
+  sessions,
+  isLoading,
+  onDelete,
+  isDeleting = false,
+}: SessionsTableProps) {
+  const navigate = useNavigate()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -46,7 +61,8 @@ export function SessionsTable({ sessions, isLoading }: SessionsTableProps) {
   }
 
   return (
-    <Table>
+    <>
+      <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -55,6 +71,7 @@ export function SessionsTable({ sessions, isLoading }: SessionsTableProps) {
           <TableHead>End Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Created</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -70,9 +87,55 @@ export function SessionsTable({ sessions, isLoading }: SessionsTableProps) {
             <TableCell className="text-muted-foreground">
               {new Date(session.createdAt).toLocaleDateString()}
             </TableCell>
+            <TableCell>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(ROUTES.ADMIN_SESSIONS_EDIT.replace(':id', session.id))
+                  }
+                >
+                  Edit
+                </Button>
+                {onDelete && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSessionId(session.id)
+                      setShowDeleteDialog(true)
+                    }}
+                    disabled={isDeleting}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
+
+    {showDeleteDialog && (
+      <SubmitDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={() => {
+          if (selectedSessionId && onDelete) {
+            onDelete(selectedSessionId)
+            setShowDeleteDialog(false)
+            setSelectedSessionId(null)
+          }
+        }}
+        isSubmitting={isDeleting}
+        title="Delete Session"
+        description="Are you sure you want to delete this recruitment session? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+      />
+    )}
+  </>
   )
 }

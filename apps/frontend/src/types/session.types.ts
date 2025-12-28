@@ -21,6 +21,16 @@ export interface CreateSessionRequest {
   year: number
   startDate: string
   endDate: string
+  collegeId?: string
+}
+
+export interface UpdateSessionRequest {
+  name?: string
+  year?: number
+  startDate?: string
+  endDate?: string
+  status?: SessionStatus
+  collegeId?: string
 }
 
 export interface ListSessionsParams {
