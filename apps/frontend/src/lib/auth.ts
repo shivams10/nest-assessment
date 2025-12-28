@@ -4,11 +4,18 @@
  */
 
 import { store } from '@/store/store'
-import { setToken, clearToken, checkTokenValidity } from '@/store/slices/auth.slice'
+import {
+  setToken,
+  setAccessToken,
+  clearToken,
+  logout,
+  checkTokenValidity,
+} from '@/store/slices/auth.slice'
 import { isTokenExpired } from './jwt'
 
 /**
  * Sets the authentication token in Redux store and localStorage
+ * Use this for initial login - validates token expiration
  * @param token - JWT token string
  */
 export function setAuthToken(token: string): void {
@@ -16,10 +23,28 @@ export function setAuthToken(token: string): void {
 }
 
 /**
+ * Sets a new access token during refresh flow
+ * Use this for token refresh - maintains auth state consistency
+ * @param token - JWT access token string
+ */
+export function setRefreshToken(token: string): void {
+  store.dispatch(setAccessToken(token))
+}
+
+/**
  * Clears the authentication token from Redux store and localStorage
+ * Use this for clearing tokens during errors or token expiration
  */
 export function clearAuthToken(): void {
   store.dispatch(clearToken())
+}
+
+/**
+ * Logs out the user - safely clears all authentication state
+ * Use this for explicit logout actions
+ */
+export function logoutUser(): void {
+  store.dispatch(logout())
 }
 
 /**

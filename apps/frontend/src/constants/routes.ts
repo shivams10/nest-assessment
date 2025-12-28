@@ -10,9 +10,10 @@ export const ROUTES = {
   
   // Protected routes
   HOME: '/',
+  ADMIN: '/admin',
+  CANDIDATE: '/candidate',
   
   // Future routes (uncomment when needed)
-  // ADMIN: '/admin',
   // PROFILE: '/profile',
   // SETTINGS: '/settings',
 } as const

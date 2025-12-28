@@ -1,17 +1,23 @@
 import type { RouteObject } from 'react-router-dom'
-import { ROUTES, TEXT } from '@/constants'
+import { ROUTES } from '@/constants'
+import { AuthGuard } from './AuthGuard'
 
 /**
  * Public routes - accessible without authentication
+ * AuthGuard prevents authenticated users from accessing these routes
  */
 export const publicRoutes: RouteObject[] = [
   {
-    path: ROUTES.LOGIN,
-    lazy: async () => {
-      // Placeholder for login page
-      const LoginPage = () => <div>{TEXT.PLACEHOLDERS.LOGIN_PAGE}</div>
-      return { Component: LoginPage }
-    },
+    element: <AuthGuard />,
+    children: [
+      {
+        path: ROUTES.LOGIN,
+        lazy: async () => {
+          const { default: LoginPage } = await import('@/pages/auth/login')
+          return { Component: LoginPage }
+        },
+      },
+    ],
   },
 ]
 
