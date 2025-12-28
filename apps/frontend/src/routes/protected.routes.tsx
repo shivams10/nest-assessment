@@ -71,6 +71,38 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
+                path: ROUTES.ADMIN_EXAM_SETS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminExamSetsPage } = await import('@/pages/admin/exam-sets/AdminExamSetsPage')
+                  return { Component: AdminExamSetsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_EXAM_SET_QUESTIONS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { ExamSetQuestionsPage } = await import('@/pages/admin/exam-sets/ExamSetQuestionsPage')
+                  return { Component: ExamSetQuestionsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_QUESTIONS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminQuestionsPage } = await import('@/pages/admin/questions/AdminQuestionsPage')
+                  return { Component: AdminQuestionsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_BULK_UPLOAD,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { BulkUploadPage } = await import('@/pages/admin/bulk-upload/BulkUploadPage')
+                  return { Component: BulkUploadPage }
+                },
+              },
+              {
                 path: ROUTES.ADMIN_SESSIONS,
                 errorElement: <ErrorPage />,
                 lazy: async () => {
