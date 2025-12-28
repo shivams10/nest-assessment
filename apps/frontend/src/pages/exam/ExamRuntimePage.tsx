@@ -26,6 +26,10 @@ import { useNavigate } from 'react-router-dom'
 export function ExamRuntimePage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const navigate = useNavigate()
+  
+  if (!submissionId) {
+    return <ErrorState message="Submission ID is required" />
+  }
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -63,12 +67,12 @@ export function ExamRuntimePage() {
 
   // Flatten all questions for navigation
   const allQuestions = useMemo(() => {
-    if (!data) return []
+    if (!data?.sections) return []
     return data.sections.flatMap((section) =>
-      section.questions.map((q) => ({
+      section?.questions?.map((q) => ({
         ...q,
-        sectionName: section.name || section.type,
-      })),
+        sectionName: section?.name || section?.type,
+      })) || [],
     )
   }, [data])
 
@@ -182,7 +186,7 @@ export function ExamRuntimePage() {
           </p>
           <Button
             className="mt-4"
-            onClick={() => navigate(ROUTES.CANDIDATE_EXAM_RESULT.replace(':submissionId', submissionId!))}
+            onClick={() => submissionId && navigate(ROUTES.CANDIDATE_EXAM_RESULT.replace(':submissionId', submissionId))}
           >
             View Results
           </Button>

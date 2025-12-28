@@ -31,7 +31,7 @@ export function ExamListPage() {
     )
   }
 
-  if (!data || data.data.length === 0) {
+  if (!data || !data.data || data.data.length === 0) {
     return (
       <EmptyState
         title="No exams available"
@@ -64,7 +64,7 @@ export function ExamListPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.data.map((exam) => (
+        {(data?.data || []).map((exam) => (
           <Card key={exam.id} className="p-6">
             <div className="space-y-4">
               <div>

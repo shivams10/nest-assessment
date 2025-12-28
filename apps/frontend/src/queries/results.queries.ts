@@ -33,8 +33,11 @@ export const resultsKeys = {
  */
 export function useCandidateResult(submissionId: string | undefined) {
   return useQuery<CandidateResult, Error>({
-    queryKey: resultsKeys.candidate(submissionId!),
-    queryFn: () => getCandidateResultService(submissionId!),
+    queryKey: resultsKeys.candidate(submissionId || ''),
+    queryFn: () => {
+      if (!submissionId) throw new Error('Submission ID is required')
+      return getCandidateResultService(submissionId)
+    },
     enabled: !!submissionId,
     staleTime: 2 * 60 * 1000, // 2 minutes - results are relatively stable
     gcTime: 5 * 60 * 1000, // 5 minutes

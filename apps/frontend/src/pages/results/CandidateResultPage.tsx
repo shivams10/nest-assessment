@@ -15,7 +15,7 @@ export function CandidateResultPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const navigate = useNavigate()
 
-  const { data, isLoading, isError, error } = useCandidateResult(submissionId)
+  const { data, isLoading, isError, error } = useCandidateResult(submissionId || undefined)
 
   if (isLoading) {
     return <LoadingState message="Loading your results..." />

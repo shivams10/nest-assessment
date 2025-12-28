@@ -35,7 +35,7 @@ export function AdminSessionsPage() {
     )
   }
 
-  if (!data || data.data.length === 0) {
+  if (!data || !data.data || data.data.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -57,7 +57,7 @@ export function AdminSessionsPage() {
     )
   }
 
-  const totalPages = Math.ceil(data.total / data.limit)
+  const totalPages = data?.limit && data?.total ? Math.ceil(data.total / data.limit) : 1
 
   return (
     <div className="space-y-6">
@@ -78,7 +78,7 @@ export function AdminSessionsPage() {
           <CardTitle>Sessions</CardTitle>
         </CardHeader>
         <CardContent>
-          <SessionsTable sessions={data.data} isLoading={isLoading} />
+          <SessionsTable sessions={data?.data || []} isLoading={isLoading} />
 
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">

@@ -83,7 +83,7 @@ export function usePublishExam() {
       queryClient.setQueryData<ListExamsResponse>(
         examsKeys.admin({}),
         (old) => {
-          if (!old) return old
+          if (!old || !old.data) return old
           return {
             ...old,
             data: old.data.map((exam) =>
@@ -134,7 +134,7 @@ export function useUnpublishExam() {
       queryClient.setQueryData<ListExamsResponse>(
         examsKeys.admin({}),
         (old) => {
-          if (!old) return old
+          if (!old || !old.data) return old
           return {
             ...old,
             data: old.data.map((exam) =>

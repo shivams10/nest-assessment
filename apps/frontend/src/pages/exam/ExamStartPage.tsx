@@ -14,6 +14,10 @@ export function ExamStartPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const navigate = useNavigate()
 
+  if (!submissionId) {
+    return <ErrorState message="Submission ID is required" />
+  }
+
   const { data, isLoading, isError, error } = useExam(submissionId)
 
   const handleStart = () => {
@@ -50,7 +54,7 @@ export function ExamStartPage() {
   // Get duration from exam data if available
   // Note: Backend should return duration in exam runtime response
   // For now, use a default if not available
-  const durationSeconds = data.durationSeconds || 3600 // Default 1 hour
+  const durationSeconds = data?.durationSeconds || 3600 // Default 1 hour
   const duration = Math.floor(durationSeconds / 60)
 
   return (
@@ -59,7 +63,7 @@ export function ExamStartPage() {
         <div className="space-y-6">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              {data.examTitle || data.examSetName || 'Exam'}
+              {data?.examTitle || data?.examSetName || 'Exam'}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Please read the instructions carefully before starting
@@ -80,7 +84,7 @@ export function ExamStartPage() {
                 Questions:
               </span>
               <span className="text-sm font-semibold text-foreground">
-                {data.sections.reduce((acc, section) => acc + section.questions.length, 0)}
+                {data?.sections?.reduce((acc, section) => acc + (section?.questions?.length || 0), 0) || 0}
               </span>
             </div>
           </div>

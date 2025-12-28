@@ -31,7 +31,7 @@ export function UsersListPage() {
     )
   }
 
-  if (!data || data.data.length === 0) {
+  if (!data || !data.data || data.data.length === 0) {
     return (
       <EmptyState
         title="No users found"
@@ -40,7 +40,7 @@ export function UsersListPage() {
     )
   }
 
-  const totalPages = Math.ceil(data.total / data.limit)
+  const totalPages = data?.limit && data?.total ? Math.ceil(data.total / data.limit) : 1
 
   return (
     <div className="space-y-6">
@@ -83,15 +83,15 @@ export function UsersListPage() {
       </div>
 
       <div className="space-y-4">
-        {data.data.map((user) => (
+        {(data?.data || []).map((user) => (
           <Card key={user.id} className="p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">
-                    {user.firstName && user.lastName
+                    {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : user.email}
+                      : user?.email || 'N/A'}
                   </span>
                   <span
                     className={`rounded-md px-2 py-1 text-xs font-medium ${
