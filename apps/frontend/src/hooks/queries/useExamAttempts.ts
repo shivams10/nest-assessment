@@ -16,7 +16,7 @@ export function useStartExam() {
     mutationFn: (data: StartExamRequest) => startExamService(data),
     onSuccess: (data) => {
       navigate(
-        ROUTES.CANDIDATE_EXAM_RUNTIME.replace(':submissionId', data.submissionId),
+        ROUTES.CANDIDATE_EXAM_RUNTIME.replace(':submissionId', data.id),
       )
     },
   })

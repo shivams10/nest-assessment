@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { loginService, type LoginRequest } from '@/services/auth.service'
 import { setAuthToken } from '@/lib/auth'
 import { getRedirectRouteByRole } from '@/lib/auth-redirect'
-import { TEXT } from '@/constants'
 
 /**
  * useLogin - React Query hook for login mutation

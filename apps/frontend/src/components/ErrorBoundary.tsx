@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { formatError, logError } from '@/utils/errorFormatter'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -28,8 +29,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // Log error using centralized formatter
+    logError(error, 'ErrorBoundary')
+    // Also log error info for debugging
+    if (import.meta.env.DEV && typeof console !== 'undefined' && console.error) {
+      console.error('ErrorBoundary error info:', errorInfo)
+    }
   }
 
   handleReload = () => {
@@ -47,6 +52,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback
       }
 
+      // Format error for user display
+      const formattedError = this.state.error
+        ? formatError(this.state.error)
+        : {
+            title: 'Unexpected Error',
+            message: 'Something went wrong. Please try reloading the page.',
+            canRetry: true,
+          }
+
       // Default fallback UI
       return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -58,6 +72,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -70,22 +85,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold text-foreground">
-                  Unexpected Error
+                  {formattedError.title}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Something went wrong. Please try reloading the page.
+                  {formattedError.message}
                 </p>
-                {this.state.error && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {this.state.error.message}
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <Button variant="outline" onClick={this.handleReset} className="flex-1 sm:flex-initial">
-                  Try Again
-                </Button>
+                {formattedError.canRetry && (
+                  <Button
+                    variant="outline"
+                    onClick={this.handleReset}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    Try Again
+                  </Button>
+                )}
                 <Button onClick={this.handleReload} className="flex-1 sm:flex-initial">
                   Reload Page
                 </Button>

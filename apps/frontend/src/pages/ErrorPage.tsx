@@ -1,6 +1,7 @@
 import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { formatError } from '@/utils/errorFormatter'
 
 /**
  * ErrorPage - Route-level error UI
@@ -11,17 +12,21 @@ export function ErrorPage() {
   const error = useRouteError()
   const navigate = useNavigate()
 
-  // Determine error message and status
-  let errorTitle = 'Something went wrong'
-  let errorMessage = 'An unexpected error occurred'
+  // Format error using centralized formatter
+  let formattedError = formatError(error)
 
   if (isRouteErrorResponse(error)) {
-    errorTitle = `Error ${error.status}`
-    errorMessage = error.statusText || error.data?.message || errorMessage
-  } else if (error instanceof Error) {
-    errorMessage = error.message
-  } else if (typeof error === 'string') {
-    errorMessage = error
+    // Override with status-specific formatting
+    const errorMessage =
+      error.statusText ||
+      (error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : undefined) ||
+      error.status.toString()
+    formattedError = formatError({
+      ...error,
+      message: errorMessage,
+    })
   }
 
   const handleReload = () => {
@@ -53,17 +58,27 @@ export function ErrorPage() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">{errorTitle}</h1>
-            <p className="text-sm text-muted-foreground">{errorMessage}</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              {formattedError.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {formattedError.message}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Button variant="outline" onClick={handleGoHome} className="flex-1 sm:flex-initial">
+            <Button
+              variant="outline"
+              onClick={handleGoHome}
+              className="flex-1 sm:flex-initial"
+            >
               Go Home
             </Button>
-            <Button onClick={handleReload} className="flex-1 sm:flex-initial">
-              Reload Page
-            </Button>
+            {formattedError.canRetry && (
+              <Button onClick={handleReload} className="flex-1 sm:flex-initial">
+                Reload Page
+              </Button>
+            )}
           </div>
         </div>
       </Card>
