@@ -5,15 +5,22 @@ import {
   Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '@prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 import { ExamRepository } from './exam.repository';
 import { CreateExamDto } from './dto/create-exam.dto';
+import { UpdateExamDto } from './dto/update-exam.dto';
 import { ListExamsDto, ExamStatusFilter } from './dto/list-exams.dto';
+
 @Injectable()
 export class ExamService {
   private readonly logger = new Logger(ExamService.name);
 
-  constructor(private readonly examRepository: ExamRepository) {}
+  constructor(
+    private readonly examRepository: ExamRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * List published exams for a session
@@ -49,9 +56,23 @@ export class ExamService {
       throw new BadRequestException('Exam end time must be after start time');
     }
 
+    // Validate session exists if provided
+    if (dto.collegeSessionId) {
+      const session = await this.prisma.recruitmentSession.findFirst({
+        where: {
+          id: dto.collegeSessionId,
+          deletedAt: null,
+        },
+      });
+
+      if (!session) {
+        throw new NotFoundException('Recruitment session not found');
+      }
+    }
+
     const masterPasswordHash = await bcrypt.hash(dto.masterPassword, 10);
 
-    const exam = await this.examRepository.create({
+    const createData: Prisma.ExamCreateInput = {
       title: dto.title,
       description: dto.description,
       windowStartsAt,
@@ -59,18 +80,20 @@ export class ExamService {
       durationSeconds: dto.durationSeconds,
       masterPasswordHash,
       isPublished: false,
-
       creator: {
         connect: { id: createdBy },
       },
+      ...(dto.collegeSessionId && {
+        session: {
+          connect: { id: dto.collegeSessionId },
+        },
+      }),
+    };
 
-      session: {
-        connect: { id: dto.collegeSessionId },
-      },
-    });
+    const exam = await this.examRepository.create(createData);
 
     this.logger.log(
-      `Exam created: examId=${exam.id}, title=${exam.title}, createdBy=${createdBy}, collegeSessionId=${dto.collegeSessionId}`,
+      `Exam created: examId=${exam.id}, title=${exam.title}, createdBy=${createdBy}, collegeSessionId=${dto.collegeSessionId || 'none'}`,
     );
 
     return exam;
@@ -79,13 +102,17 @@ export class ExamService {
   async listExamsForAdmin(dto: ListExamsDto) {
     // Ensure page and limit are numbers (query params come as strings)
     // Handle both string and number types, with proper fallbacks
-    const pageNum = dto.page 
-      ? (typeof dto.page === 'string' ? parseInt(dto.page, 10) : Number(dto.page))
+    const pageNum = dto.page
+      ? typeof dto.page === 'string'
+        ? parseInt(dto.page, 10)
+        : Number(dto.page)
       : 1;
-    const limitNum = dto.limit 
-      ? (typeof dto.limit === 'string' ? parseInt(dto.limit, 10) : Number(dto.limit))
+    const limitNum = dto.limit
+      ? typeof dto.limit === 'string'
+        ? parseInt(dto.limit, 10)
+        : Number(dto.limit)
       : 20;
-    
+
     // Ensure we have valid numbers (not NaN)
     const page = isNaN(pageNum) || pageNum < 1 ? 1 : pageNum;
     const limit = isNaN(limitNum) || limitNum < 1 ? 20 : limitNum;
@@ -129,6 +156,81 @@ export class ExamService {
     this.logger.log(
       `Exam unpublished: examId=${examId}, title=${updated.title}, collegeSessionId=${updated.collegeSessionId}`,
     );
+
+    return updated;
+  }
+
+  async findByIdForAdmin(id: string) {
+    const exam = await this.examRepository.findById(id);
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    return this.examRepository.findByIdForAdmin(id);
+  }
+
+  async updateExam(id: string, dto: UpdateExamDto) {
+    const exam = await this.examRepository.findById(id);
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    // Only DRAFT exams can be edited
+    if (exam.isPublished) {
+      throw new BadRequestException('Cannot edit a published exam');
+    }
+
+    // Validate dates if both provided
+    if (dto.windowStartsAt && dto.windowEndsAt) {
+      const windowStartsAt = new Date(dto.windowStartsAt);
+      const windowEndsAt = new Date(dto.windowEndsAt);
+
+      if (windowStartsAt >= windowEndsAt) {
+        throw new BadRequestException('Exam end time must be after start time');
+      }
+    }
+
+    // Validate session exists if provided
+    if (dto.collegeSessionId) {
+      const session = await this.prisma.recruitmentSession.findFirst({
+        where: {
+          id: dto.collegeSessionId,
+          deletedAt: null,
+        },
+      });
+
+      if (!session) {
+        throw new NotFoundException('Recruitment session not found');
+      }
+    }
+
+    const updateData: Prisma.ExamUpdateInput = {};
+
+    if (dto.title !== undefined) updateData.title = dto.title;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.windowStartsAt !== undefined)
+      updateData.windowStartsAt = dto.windowStartsAt
+        ? new Date(dto.windowStartsAt)
+        : null;
+    if (dto.windowEndsAt !== undefined)
+      updateData.windowEndsAt = dto.windowEndsAt
+        ? new Date(dto.windowEndsAt)
+        : null;
+    if (dto.durationSeconds !== undefined)
+      updateData.durationSeconds = dto.durationSeconds;
+    if (dto.collegeSessionId !== undefined) {
+      if (dto.collegeSessionId) {
+        updateData.session = { connect: { id: dto.collegeSessionId } };
+      } else {
+        updateData.session = { disconnect: true };
+      }
+    }
+
+    const updated = await this.examRepository.update(id, updateData);
+
+    this.logger.log(`Exam updated: examId=${id}, title=${updated.title}`);
 
     return updated;
   }

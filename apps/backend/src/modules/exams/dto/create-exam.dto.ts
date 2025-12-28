@@ -5,12 +5,13 @@ import {
   IsInt,
   Min,
   IsDateString,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateExamDto {
+  @IsOptional()
   @IsUUID()
-  @IsNotEmpty()
-  collegeSessionId!: string;
+  collegeSessionId?: string;
 
   @IsString()
   @IsNotEmpty()

@@ -115,4 +115,22 @@ export class ExamRepository {
       select: EXAM_ADMIN_SELECT,
     });
   }
+
+  findByIdForAdmin(id: string) {
+    return this.prisma.exam.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: EXAM_ADMIN_SELECT,
+    });
+  }
+
+  update(id: string, data: Prisma.ExamUpdateInput) {
+    return this.prisma.exam.update({
+      where: { id },
+      data,
+      select: EXAM_ADMIN_SELECT,
+    });
+  }
 }
