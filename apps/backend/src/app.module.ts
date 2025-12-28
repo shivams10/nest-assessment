@@ -12,6 +12,7 @@ import { ExamsModule } from './modules/exams/exam.module';
 import { ExamAttemptsModule } from './modules/exam-attempts/exam-attempts.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RecruitmentSessionModule } from './modules/recruitment-sessions/recruitment-session.module';
+import { QuestionsModule } from './modules/questions/questions.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RecruitmentSessionModule } from './modules/recruitment-sessions/recruit
     AuthModule,
     AdminModule,
     RecruitmentSessionModule,
+    QuestionsModule,
   ],
   controllers: [AppController],
   providers: [

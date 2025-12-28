@@ -13,12 +13,55 @@ const EXAM_SET_SECTION_PUBLIC_SELECT = {
   sectionType: true,
   questionCount: true,
   examSetId: true,
-  createdAt: true,
 } as const;
 
 @Injectable()
 export class ExamSetsRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findManyByExam(examId: string) {
+    const examSets = await this.prisma.examSet.findMany({
+      where: { examId },
+      include: {
+        sections: {
+          select: {
+            id: true,
+            sectionType: true,
+            questionCount: true,
+            examSetId: true,
+          },
+        },
+      },
+    });
+
+    // Calculate assignedQuestionsCount for each section
+    const examSetsWithCounts = await Promise.all(
+      examSets.map(async (set) => {
+        const sectionsWithCounts = await Promise.all(
+          set.sections.map(async (section) => {
+            const assignedCount = await this.prisma.examSetQuestion.count({
+              where: { examSetSectionId: section.id },
+            });
+
+            return {
+              ...section,
+              assignedQuestionsCount: assignedCount,
+            };
+          }),
+        );
+
+        return {
+          ...set,
+          sections: sectionsWithCounts,
+        };
+      }),
+    );
+
+    return {
+      items: examSetsWithCounts,
+      total: examSetsWithCounts.length,
+    };
+  }
 
   createSet(examId: string, name: string) {
     return this.prisma.examSet.create({
@@ -27,6 +70,12 @@ export class ExamSetsRepository {
         exam: { connect: { id: examId } },
       },
       select: EXAM_SET_PUBLIC_SELECT,
+    });
+  }
+
+  softDelete(setId: string) {
+    return this.prisma.examSet.delete({
+      where: { id: setId },
     });
   }
 
@@ -41,6 +90,14 @@ export class ExamSetsRepository {
         questionCount,
         examSet: { connect: { id: examSetId } },
       },
+      select: EXAM_SET_SECTION_PUBLIC_SELECT,
+    });
+  }
+
+  updateSection(sectionId: string, questionCount: number) {
+    return this.prisma.examSetSection.update({
+      where: { id: sectionId },
+      data: { questionCount },
       select: EXAM_SET_SECTION_PUBLIC_SELECT,
     });
   }

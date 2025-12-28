@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ExamSetQuestionsRepository } from './exam-set-questions.repository';
 import { AddExamSetQuestionsDto } from './dto/add-exam-set-questions.dto';
 import { PrismaService } from '@prisma/prisma.service';
@@ -9,6 +13,27 @@ export class ExamSetQuestionsService {
     private readonly repo: ExamSetQuestionsRepository,
     private readonly prisma: PrismaService,
   ) {}
+
+  async getSectionQuestions(sectionId: string) {
+    const section = await this.prisma.examSetSection.findUnique({
+      where: { id: sectionId },
+    });
+
+    if (!section) {
+      throw new NotFoundException('Exam set section not found');
+    }
+
+    const assignedQuestions = await this.repo.findAssignedQuestions(sectionId);
+    const availableQuestions = await this.repo.findAvailableQuestions(
+      section.sectionType,
+      sectionId,
+    );
+
+    return {
+      assignedQuestions,
+      availableQuestions,
+    };
+  }
 
   async addQuestions(dto: AddExamSetQuestionsDto) {
     const section = await this.prisma.examSetSection.findUnique({
