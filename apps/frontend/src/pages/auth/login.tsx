@@ -1,10 +1,6 @@
 import { useForm } from 'react-hook-form'
-import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { zodResolver } from '@/lib/form-utils'
-import { login } from '@/lib/auth.api'
-import { setAuthToken } from '@/lib/auth'
-import { getRedirectRouteByRole } from '@/lib/auth-redirect'
+import { useLogin } from '@/hooks/queries/useAuth'
 import { TEXT } from '@/constants'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -35,8 +31,6 @@ import { loginSchema, type LoginFormValues } from './schemas/login.schema'
  * @returns {JSX.Element} Login page component
  */
 export default function LoginPage() {
-  const navigate = useNavigate()
-  
   // Destructure text constants for cleaner code
   const { APP_NAME, LOGIN, ERRORS } = TEXT
   
@@ -54,34 +48,26 @@ export default function LoginPage() {
   const { errors } = formState
   const { root: rootError, email: emailError, password: passwordError } = errors
 
-  const loginMutation = useMutation({
-    mutationFn: login,
-    onSuccess: ({ accessToken }) => {
-      // Store accessToken in Redux (this also persists to localStorage and decodes JWT)
-      setAuthToken(accessToken)
-
-      // Clear form
-      reset()
-
-      // Redirect based on user role
-      const redirectRoute = getRedirectRouteByRole()
-      navigate(redirectRoute, { replace: true })
-    },
-    onError: (error: Error) => {
-      // Set form error for user feedback
-      setError('root', {
-        type: 'manual',
-        message: error.message || ERRORS.LOGIN_FAILED,
-      })
-    },
-  })
+  const loginMutation = useLogin()
 
   const onSubmit = async (data: LoginFormValues) => {
     // Clear any previous root errors
     clearErrors('root')
     
     // Trigger login mutation
-    loginMutation.mutate(data)
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        // Clear form on success
+        reset()
+      },
+      onError: (error: Error) => {
+        // Set form error for user feedback
+        setError('root', {
+          type: 'manual',
+          message: error.message || ERRORS.LOGIN_FAILED,
+        })
+      },
+    })
   }
 
   const isSubmitting = loginMutation.isPending
