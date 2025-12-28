@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSessions } from '@/queries/sessions.queries'
+import { useSessions, useDeleteSession } from '@/queries/sessions.queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingState } from '@/components/shared/LoadingState'
@@ -21,6 +21,12 @@ export function AdminSessionsPage() {
     page,
     limit: 10,
   })
+
+  const deleteSessionMutation = useDeleteSession()
+
+  const handleDelete = (sessionId: string) => {
+    deleteSessionMutation.mutate(sessionId)
+  }
 
   if (isLoading) {
     return <LoadingState message="Loading sessions..." />
@@ -78,7 +84,12 @@ export function AdminSessionsPage() {
           <CardTitle>Sessions</CardTitle>
         </CardHeader>
         <CardContent>
-          <SessionsTable sessions={data?.data || []} isLoading={isLoading} />
+          <SessionsTable
+            sessions={data?.data || []}
+            isLoading={isLoading}
+            onDelete={handleDelete}
+            isDeleting={deleteSessionMutation.isPending}
+          />
 
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">

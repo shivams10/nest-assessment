@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAdminExams, usePublishExam, useUnpublishExam } from '@/queries/exams.queries'
+import { useAdminExams, usePublishExam, useUnpublishExam, useDeleteExam } from '@/queries/exams.queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -31,6 +31,7 @@ export function AdminExamsPage() {
 
   const publishExamMutation = usePublishExam()
   const unpublishExamMutation = useUnpublishExam()
+  const deleteExamMutation = useDeleteExam()
 
   const handlePublish = (examId: string) => {
     publishExamMutation.mutate(examId)
@@ -38,6 +39,10 @@ export function AdminExamsPage() {
 
   const handleUnpublish = (examId: string) => {
     unpublishExamMutation.mutate(examId)
+  }
+
+  const handleDelete = (examId: string) => {
+    deleteExamMutation.mutate(examId)
   }
 
   if (isLoading) {
@@ -139,8 +144,10 @@ export function AdminExamsPage() {
             isLoading={isLoading}
             onPublish={handlePublish}
             onUnpublish={handleUnpublish}
+            onDelete={handleDelete}
             isPublishing={publishExamMutation.isPending}
             isUnpublishing={unpublishExamMutation.isPending}
+            isDeleting={deleteExamMutation.isPending}
           />
 
           {totalPages > 1 && (

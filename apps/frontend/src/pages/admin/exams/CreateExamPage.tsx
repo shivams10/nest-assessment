@@ -5,7 +5,7 @@ import { ExamForm } from './components/ExamForm'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { ROUTES } from '@/constants'
-import type { CreateExamRequest } from '@/types/exam.types'
+import type { CreateExamRequest, UpdateExamRequest } from '@/types/exam.types'
 
 /**
  * CreateExamPage - Page for creating a new exam
@@ -16,8 +16,8 @@ export function CreateExamPage() {
   const createExamMutation = useCreateExam()
   const { data: sessionsData, isLoading: sessionsLoading } = useSessions({ limit: 1000 })
 
-  const handleSubmit = (data: CreateExamRequest) => {
-    createExamMutation.mutate(data)
+  const handleSubmit = (data: CreateExamRequest | UpdateExamRequest) => {
+    createExamMutation.mutate(data as CreateExamRequest)
   }
 
   if (sessionsLoading) {

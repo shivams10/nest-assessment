@@ -1,87 +1,31 @@
 /**
- * Sessions API Service
- * Pure service functions for recruitment session API calls
+ * Exam Sets API Service
+ * Pure service functions for exam set API calls
  */
 
 import { apiClient } from '@/lib/axios'
 import type { AxiosError } from 'axios'
 import type { ApiErrorResponse } from '@/services/auth.service'
 import type {
-  RecruitmentSession,
-  CreateSessionRequest,
-  UpdateSessionRequest,
-  ListSessionsParams,
-  ListSessionsResponse,
-} from '@/types/session.types'
+  ExamSet,
+  ExamSetSection,
+  CreateExamSetRequest,
+  CreateExamSetSectionRequest,
+  UpdateExamSetSectionRequest,
+  ListExamSetsParams,
+  ListExamSetsResponse,
+} from '@/types/examSet.types'
 
 /**
- * List recruitment sessions service
- * GET /admin/sessions
+ * List exam sets for an exam
+ * GET /admin/exams/:examId/sets
  */
-export async function listSessionsService(
-  params?: ListSessionsParams,
-): Promise<ListSessionsResponse> {
+export async function listExamSetsService(
+  params: ListExamSetsParams,
+): Promise<ListExamSetsResponse> {
   try {
-    const response = await apiClient.get<{
-      items: RecruitmentSession[]
-      total: number
-    }>('/admin/sessions', {
-      params,
-    })
-
-    // Transform backend response to match frontend's ListSessionsResponse
-    return {
-      data: response.data.items || [],
-      total: response.data.total || 0,
-      page: params?.page || 1,
-      limit: params?.limit || 10,
-    }
-  } catch (error) {
-    const axiosError = error as AxiosError<ApiErrorResponse>
-    const errorMessage =
-      axiosError.response?.data?.message ||
-      axiosError.response?.data?.error ||
-      axiosError.message ||
-      'Failed to fetch sessions'
-    const customError = new Error(errorMessage)
-    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
-    throw customError
-  }
-}
-
-/**
- * Create recruitment session service
- * POST /admin/sessions
- */
-export async function createSessionService(
-  data: CreateSessionRequest,
-): Promise<RecruitmentSession> {
-  try {
-    const response = await apiClient.post<RecruitmentSession>('/admin/sessions', data)
-    return response.data
-  } catch (error) {
-    const axiosError = error as AxiosError<ApiErrorResponse>
-    const errorMessage =
-      axiosError.response?.data?.message ||
-      axiosError.response?.data?.error ||
-      axiosError.message ||
-      'Failed to create session'
-    const customError = new Error(errorMessage)
-    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
-    throw customError
-  }
-}
-
-/**
- * Get recruitment session by ID service
- * GET /admin/sessions/:id
- */
-export async function getSessionService(
-  id: string,
-): Promise<RecruitmentSession> {
-  try {
-    const response = await apiClient.get<RecruitmentSession>(
-      `/admin/sessions/${id}`,
+    const response = await apiClient.get<ListExamSetsResponse>(
+      `/admin/exams/${params.examId}/sets`,
     )
     return response.data
   } catch (error) {
@@ -90,7 +34,7 @@ export async function getSessionService(
       axiosError.response?.data?.message ||
       axiosError.response?.data?.error ||
       axiosError.message ||
-      'Failed to fetch session'
+      'Failed to fetch exam sets'
     const customError = new Error(errorMessage)
     ;(customError as unknown as { status?: number }).status = axiosError.response?.status
     throw customError
@@ -98,16 +42,82 @@ export async function getSessionService(
 }
 
 /**
- * Update recruitment session service
- * PATCH /admin/sessions/:id
+ * Create exam set
+ * POST /exam-sets
  */
-export async function updateSessionService(
-  id: string,
-  data: UpdateSessionRequest,
-): Promise<RecruitmentSession> {
+export async function createExamSetService(
+  data: CreateExamSetRequest,
+): Promise<ExamSet> {
   try {
-    const response = await apiClient.patch<RecruitmentSession>(
-      `/admin/sessions/${id}`,
+    const response = await apiClient.post<ExamSet>('/exam-sets', data)
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to create exam set'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
+ * Delete exam set
+ * DELETE /admin/exams/sets/:setId
+ */
+export async function deleteExamSetService(setId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/admin/exams/sets/${setId}`)
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to delete exam set'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
+ * Create exam set section
+ * POST /exam-sets/sections
+ */
+export async function createExamSetSectionService(
+  data: CreateExamSetSectionRequest,
+): Promise<ExamSetSection> {
+  try {
+    const response = await apiClient.post<ExamSetSection>('/exam-sets/sections', data)
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to create section'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
+ * Update exam set section
+ * PATCH /admin/exam-sets/sections/:sectionId
+ */
+export async function updateExamSetSectionService(
+  sectionId: string,
+  data: UpdateExamSetSectionRequest,
+): Promise<ExamSetSection> {
+  try {
+    const response = await apiClient.patch<ExamSetSection>(
+      `/admin/exam-sets/sections/${sectionId}`,
       data,
     )
     return response.data
@@ -117,31 +127,10 @@ export async function updateSessionService(
       axiosError.response?.data?.message ||
       axiosError.response?.data?.error ||
       axiosError.message ||
-      'Failed to update session'
+      'Failed to update section'
     const customError = new Error(errorMessage)
     ;(customError as unknown as { status?: number }).status = axiosError.response?.status
     throw customError
   }
 }
 
-/**
- * Delete recruitment session service (soft delete)
- * DELETE /admin/sessions/:id
- */
-export async function deleteSessionService(
-  id: string,
-): Promise<void> {
-  try {
-    await apiClient.delete(`/admin/sessions/${id}`)
-  } catch (error) {
-    const axiosError = error as AxiosError<ApiErrorResponse>
-    const errorMessage =
-      axiosError.response?.data?.message ||
-      axiosError.response?.data?.error ||
-      axiosError.message ||
-      'Failed to delete session'
-    const customError = new Error(errorMessage)
-    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
-    throw customError
-  }
-}

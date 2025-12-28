@@ -27,8 +27,14 @@ export const ROUTES = {
   ADMIN_ANALYTICS: '/admin/analytics',
   ADMIN_SESSIONS: '/admin/sessions',
   ADMIN_SESSIONS_NEW: '/admin/sessions/new',
+  ADMIN_SESSIONS_EDIT: '/admin/sessions/:id/edit',
   ADMIN_EXAMS: '/admin/exams',
   ADMIN_EXAMS_NEW: '/admin/exams/new',
+  ADMIN_EXAMS_EDIT: '/admin/exams/:id/edit',
+  ADMIN_EXAM_SETS: '/admin/exams/:examId/sets',
+  ADMIN_EXAM_SET_QUESTIONS: '/admin/exams/:examId/sets/:setId/questions',
+  ADMIN_QUESTIONS: '/admin/questions',
+  ADMIN_BULK_UPLOAD: '/admin/bulk-upload',
   
   // Exam routes (standalone, not under candidate layout)
   EXAM_START: '/exam/:submissionId/start',

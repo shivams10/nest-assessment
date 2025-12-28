@@ -11,9 +11,9 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { CreateSessionRequest } from '@/types/session.types'
+import type { CreateSessionRequest, UpdateSessionRequest } from '@/types/session.types'
 
-const sessionSchema = z.object({
+const createSessionSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   year: z.number().int().min(2000).max(2100),
   startDate: z.string().min(1, 'Start date is required'),
@@ -28,12 +28,28 @@ const sessionSchema = z.object({
   path: ['endDate'],
 })
 
-type SessionFormData = z.infer<typeof sessionSchema>
+const updateSessionSchema = z.object({
+  name: z.string().min(1, 'Name is required').optional(),
+  year: z.number().int().min(2000).max(2100).optional(),
+  startDate: z.string().min(1, 'Start date is required').optional(),
+  endDate: z.string().min(1, 'End date is required').optional(),
+}).refine((data) => {
+  if (data.startDate && data.endDate) {
+    return new Date(data.endDate) >= new Date(data.startDate)
+  }
+  return true
+}, {
+  message: 'End date must be after start date',
+  path: ['endDate'],
+})
+
+type SessionFormData = z.infer<typeof createSessionSchema> | z.infer<typeof updateSessionSchema>
 
 interface SessionFormProps {
-  onSubmit: (data: CreateSessionRequest) => void
+  onSubmit: (data: CreateSessionRequest | UpdateSessionRequest) => void
   isLoading?: boolean
   defaultValues?: Partial<SessionFormData>
+  isEdit?: boolean
 }
 
 /**
@@ -43,33 +59,45 @@ export function SessionForm({
   onSubmit,
   isLoading = false,
   defaultValues,
+  isEdit = false,
 }: SessionFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SessionFormData>({
-    resolver: zodResolver(sessionSchema),
+    resolver: zodResolver(isEdit ? updateSessionSchema : createSessionSchema),
     defaultValues: defaultValues || {
       year: new Date().getFullYear(),
     },
   })
 
   const handleFormSubmit = (data: SessionFormData) => {
-    onSubmit({
-      name: data.name,
-      year: data.year,
-      startDate: data.startDate,
-      endDate: data.endDate,
-    })
+    if (isEdit) {
+      onSubmit({
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.year !== undefined && { year: data.year }),
+        ...(data.startDate !== undefined && { startDate: data.startDate }),
+        ...(data.endDate !== undefined && { endDate: data.endDate }),
+      } as UpdateSessionRequest)
+    } else {
+      onSubmit({
+        name: data.name!,
+        year: data.year!,
+        startDate: data.startDate!,
+        endDate: data.endDate!,
+      } as CreateSessionRequest)
+    }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Recruitment Session</CardTitle>
+        <CardTitle>{isEdit ? 'Edit Recruitment Session' : 'Create Recruitment Session'}</CardTitle>
         <CardDescription>
-          Create a new recruitment session for organizing exams
+          {isEdit
+            ? 'Update recruitment session details'
+            : 'Create a new recruitment session for organizing exams'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -131,7 +159,13 @@ export function SessionForm({
 
           <div className="flex gap-2">
             <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? 'Creating...' : 'Create Session'}
+              {isLoading
+                ? isEdit
+                  ? 'Updating...'
+                  : 'Creating...'
+                : isEdit
+                  ? 'Update Session'
+                  : 'Create Session'}
             </Button>
           </div>
         </form>

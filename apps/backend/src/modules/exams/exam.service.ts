@@ -234,4 +234,25 @@ export class ExamService {
 
     return updated;
   }
+
+  async deleteExam(examId: string) {
+    const exam = await this.examRepository.findById(examId);
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    // Only DRAFT exams can be deleted
+    if (exam.isPublished) {
+      throw new BadRequestException(
+        'Cannot delete a published exam. Unpublish it first.',
+      );
+    }
+
+    const deleted = await this.examRepository.softDelete(examId);
+
+    this.logger.log(`Exam deleted: examId=${examId}, title=${exam.title}`);
+
+    return deleted;
+  }
 }

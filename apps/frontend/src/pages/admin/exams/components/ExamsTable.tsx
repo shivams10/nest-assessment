@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '@/constants'
 import {
   Table,
   TableBody,
@@ -9,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { SubmitDialog } from '@/pages/exam/components/SubmitDialog'
 import { ExamStatusBadge } from './ExamStatusBadge'
 import type { Exam } from '@/types/exam.types'
 
@@ -17,8 +20,11 @@ interface ExamsTableProps {
   isLoading?: boolean
   onPublish?: (examId: string) => void
   onUnpublish?: (examId: string) => void
+  onEdit?: (examId: string) => void
+  onDelete?: (examId: string) => void
   isPublishing?: boolean
   isUnpublishing?: boolean
+  isDeleting?: boolean
 }
 
 /**
@@ -29,11 +35,16 @@ export function ExamsTable({
   isLoading,
   onPublish,
   onUnpublish,
+  onEdit,
+  onDelete,
   isPublishing = false,
   isUnpublishing = false,
+  isDeleting = false,
 }: ExamsTableProps) {
+  const navigate = useNavigate()
   const [showPublishDialog, setShowPublishDialog] = useState(false)
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
 
   if (isLoading) {
@@ -100,6 +111,19 @@ export function ExamsTable({
     }
   }
 
+  const handleDeleteClick = (examId: string) => {
+    setSelectedExamId(examId)
+    setShowDeleteDialog(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (selectedExamId && onDelete) {
+      onDelete(selectedExamId)
+      setShowDeleteDialog(false)
+      setSelectedExamId(null)
+    }
+  }
+
   return (
     <>
       <Table>
@@ -128,25 +152,52 @@ export function ExamsTable({
                 <ExamStatusBadge isPublished={exam.isPublished} />
               </TableCell>
               <TableCell>
-                {exam.isPublished ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUnpublishClick(exam.id)}
-                    disabled={isUnpublishing}
-                  >
-                    Unpublish
-                  </Button>
-                ) : (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handlePublishClick(exam.id)}
-                    disabled={isPublishing}
-                  >
-                    Publish
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {!exam.isPublished && onEdit && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (onEdit) {
+                          onEdit(exam.id)
+                        } else {
+                          navigate(ROUTES.ADMIN_EXAMS_EDIT.replace(':id', exam.id))
+                        }
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  {exam.isPublished ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUnpublishClick(exam.id)}
+                      disabled={isUnpublishing}
+                    >
+                      Unpublish
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handlePublishClick(exam.id)}
+                      disabled={isPublishing}
+                    >
+                      Publish
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(exam.id)}
+                      disabled={isDeleting}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -211,6 +262,19 @@ export function ExamsTable({
             </div>
           </Card>
         </div>
+      )}
+
+      {showDeleteDialog && (
+        <SubmitDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onConfirm={handleConfirmDelete}
+          isSubmitting={isDeleting}
+          title="Delete Exam"
+          description="Are you sure you want to delete this exam? This action cannot be undone."
+          confirmText="Delete"
+          variant="destructive"
+        />
       )}
     </>
   )

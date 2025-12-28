@@ -63,6 +63,46 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
+                path: ROUTES.ADMIN_EXAMS_EDIT,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { EditExamPage } = await import('@/pages/admin/exams/EditExamPage')
+                  return { Component: EditExamPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_EXAM_SETS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminExamSetsPage } = await import('@/pages/admin/exam-sets/AdminExamSetsPage')
+                  return { Component: AdminExamSetsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_EXAM_SET_QUESTIONS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { ExamSetQuestionsPage } = await import('@/pages/admin/exam-sets/ExamSetQuestionsPage')
+                  return { Component: ExamSetQuestionsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_QUESTIONS,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminQuestionsPage } = await import('@/pages/admin/questions/AdminQuestionsPage')
+                  return { Component: AdminQuestionsPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_BULK_UPLOAD,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { BulkUploadPage } = await import('@/pages/admin/bulk-upload/BulkUploadPage')
+                  return { Component: BulkUploadPage }
+                },
+              },
+              {
                 path: ROUTES.ADMIN_SESSIONS,
                 errorElement: <ErrorPage />,
                 lazy: async () => {
@@ -76,6 +116,14 @@ export const protectedRoutes: RouteObject[] = [
                 lazy: async () => {
                   const { CreateSessionPage } = await import('@/pages/admin/sessions/CreateSessionPage')
                   return { Component: CreateSessionPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_SESSIONS_EDIT,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { EditSessionPage } = await import('@/pages/admin/sessions/EditSessionPage')
+                  return { Component: EditSessionPage }
                 },
               },
               {
