@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ExamsModule } from './modules/exams/exam.module';
 import { ExamAttemptsModule } from './modules/exam-attempts/exam-attempts.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { RecruitmentSessionModule } from './modules/recruitment-sessions/recruitment-session.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AdminModule } from './modules/admin/admin.module';
     ExamAttemptsModule,
     AuthModule,
     AdminModule,
+    RecruitmentSessionModule,
   ],
   controllers: [AppController],
   providers: [
