@@ -9,6 +9,7 @@ interface AppProvidersProps {
 /**
  * AppProviders - Consolidates all application-level providers
  * This component wraps the app with Redux and React Query providers
+ * Note: Router is handled via RouterProvider in App.tsx
  */
 export function AppProviders({ children }: AppProvidersProps) {
   return (

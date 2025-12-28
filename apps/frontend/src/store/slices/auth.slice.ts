@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { decodeJWT, isTokenExpired, getRoleFromToken } from '@/lib/jwt'
+import { STORAGE_KEYS } from '@/constants'
 
 interface AuthState {
   token: string | null
@@ -7,14 +8,12 @@ interface AuthState {
   isAuthenticated: boolean
 }
 
-const TOKEN_KEY = 'auth_token'
-
 // Load token from localStorage on initialization
 function loadTokenFromStorage(): string | null {
   if (typeof window === 'undefined') {
     return null
   }
-  return localStorage.getItem(TOKEN_KEY)
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
 }
 
 // Initialize state with token from localStorage
@@ -44,7 +43,7 @@ const authSlice = createSlice({
 
       // Persist to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem(TOKEN_KEY, token)
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
       }
     },
     clearToken: (state) => {
@@ -54,7 +53,7 @@ const authSlice = createSlice({
 
       // Remove from localStorage
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
       }
     },
     checkTokenValidity: (state) => {
@@ -70,7 +69,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false
 
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
         }
       } else {
         // Token is still valid, ensure role is set
