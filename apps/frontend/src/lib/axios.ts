@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { store } from '@/store/store'
 import { clearToken, setAccessToken } from '@/store/slices/auth.slice'
-import { refreshToken } from './auth.api'
+import { refreshTokenService } from '@/services/auth.service'
 
 // Extend AxiosRequestConfig to include retry flag
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -99,7 +99,7 @@ apiClient.interceptors.response.use(
 
       try {
         // Call refresh token API (skip auth refresh for this call)
-        const newAccessToken = await refreshToken()
+        const newAccessToken = await refreshTokenService()
 
         // Store new access token in Redux (uses setAccessToken for refresh flow)
         store.dispatch(setAccessToken(newAccessToken))

@@ -14,9 +14,16 @@ export const ROUTES = {
   ADMIN: '/admin',
   CANDIDATE: '/candidate',
   
-  // Future routes (uncomment when needed)
-  // PROFILE: '/profile',
-  // SETTINGS: '/settings',
+  // Candidate routes
+  CANDIDATE_EXAMS: '/candidate/exams',
+  CANDIDATE_EXAM_START: '/candidate/exams/:examId/start',
+  CANDIDATE_EXAM_RUNTIME: '/candidate/exams/:submissionId/runtime',
+  CANDIDATE_EXAM_SUCCESS: '/candidate/exams/:submissionId/success',
+  CANDIDATE_EXAM_RESULT: '/candidate/exams/:submissionId/result',
+  
+  // Admin routes
+  ADMIN_USERS: '/admin/users',
+  ADMIN_RESULTS: '/admin/results',
 } as const
 
 /**

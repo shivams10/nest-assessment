@@ -1,7 +1,9 @@
 import type { RouteObject } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminGuard } from './AdminGuard'
+import { CandidateGuard } from './CandidateGuard'
 import { AdminLayout } from '@/components/admin/AdminLayout'
+import { CandidateLayout } from '@/components/candidate/CandidateLayout'
 import { ROUTES, TEXT } from '@/constants'
 
 /**
@@ -61,17 +63,63 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
-                path: `${ROUTES.ADMIN}/results`,
+                path: ROUTES.ADMIN_RESULTS,
                 lazy: async () => {
-                  const AdminResults = () => <div>Results (Coming Soon)</div>
-                  return { Component: AdminResults }
+                  const { ResultsListPage } = await import('@/pages/admin/ResultsListPage')
+                  return { Component: ResultsListPage }
                 },
               },
               {
-                path: `${ROUTES.ADMIN}/users`,
+                path: ROUTES.ADMIN_USERS,
                 lazy: async () => {
-                  const AdminUsers = () => <div>Users (Coming Soon)</div>
-                  return { Component: AdminUsers }
+                  const { UsersListPage } = await import('@/pages/admin/UsersListPage')
+                  return { Component: UsersListPage }
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        // Candidate routes - require candidate role
+        element: <CandidateGuard />,
+        children: [
+          {
+            element: <CandidateLayout />,
+            children: [
+              {
+                path: ROUTES.CANDIDATE_EXAMS,
+                lazy: async () => {
+                  const { ExamListPage } = await import('@/pages/candidate/ExamListPage')
+                  return { Component: ExamListPage }
+                },
+              },
+              {
+                path: ROUTES.CANDIDATE_EXAM_START,
+                lazy: async () => {
+                  const { ExamStartPage } = await import('@/pages/candidate/ExamStartPage')
+                  return { Component: ExamStartPage }
+                },
+              },
+              {
+                path: ROUTES.CANDIDATE_EXAM_RUNTIME,
+                lazy: async () => {
+                  const { ExamRuntimePage } = await import('@/pages/candidate/ExamRuntimePage')
+                  return { Component: ExamRuntimePage }
+                },
+              },
+              {
+                path: ROUTES.CANDIDATE_EXAM_SUCCESS,
+                lazy: async () => {
+                  const { ExamSuccessPage } = await import('@/pages/candidate/ExamSuccessPage')
+                  return { Component: ExamSuccessPage }
+                },
+              },
+              {
+                path: ROUTES.CANDIDATE_EXAM_RESULT,
+                lazy: async () => {
+                  const { ExamResultPage } = await import('@/pages/candidate/ExamResultPage')
+                  return { Component: ExamResultPage }
                 },
               },
             ],
