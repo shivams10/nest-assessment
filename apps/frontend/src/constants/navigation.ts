@@ -28,7 +28,7 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
   },
   {
     label: TEXT.ADMIN.NAVIGATION.EXAMS,
-    path: `${ROUTES.ADMIN}/exams`,
+    path: ROUTES.ADMIN_EXAMS,
     allowedRoles: ADMIN_ROLES,
   },
   {
@@ -38,12 +38,22 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
   },
   {
     label: TEXT.ADMIN.NAVIGATION.RESULTS,
-    path: `${ROUTES.ADMIN}/results`,
+    path: ROUTES.ADMIN_RESULTS,
+    allowedRoles: ADMIN_ROLES,
+  },
+  {
+    label: TEXT.ADMIN.NAVIGATION.ANALYTICS,
+    path: ROUTES.ADMIN_ANALYTICS,
+    allowedRoles: ADMIN_ROLES,
+  },
+  {
+    label: TEXT.ADMIN.NAVIGATION.SESSIONS,
+    path: ROUTES.ADMIN_SESSIONS,
     allowedRoles: ADMIN_ROLES,
   },
   {
     label: TEXT.ADMIN.NAVIGATION.USERS,
-    path: `${ROUTES.ADMIN}/users`,
+    path: ROUTES.ADMIN_USERS,
     allowedRoles: [ROLES.ADMIN], // Admin only
   },
 ]

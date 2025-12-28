@@ -57,6 +57,8 @@ export const TEXT = {
       EXAMS: 'Exams',
       CANDIDATES: 'Candidates',
       RESULTS: 'Results',
+      ANALYTICS: 'Analytics',
+      SESSIONS: 'Sessions',
       USERS: 'Users',
     },
   },

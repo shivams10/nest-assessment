@@ -26,7 +26,7 @@ export function ExamRuntimePage() {
     if (data?.expiresAt) {
       const updateTimer = () => {
         const now = new Date().getTime()
-        const expires = new Date(data.expiresAt).getTime()
+        const expires = new Date(data.expiresAt!).getTime()
         const remaining = Math.max(0, Math.floor((expires - now) / 1000))
         setTimeRemaining(remaining)
         if (remaining === 0 && !submitExamMutation.isPending) {

@@ -77,7 +77,19 @@ export class ExamService {
   }
 
   async listExamsForAdmin(dto: ListExamsDto) {
-    const skip = (dto.page - 1) * dto.limit;
+    // Ensure page and limit are numbers (query params come as strings)
+    // Handle both string and number types, with proper fallbacks
+    const pageNum = dto.page 
+      ? (typeof dto.page === 'string' ? parseInt(dto.page, 10) : Number(dto.page))
+      : 1;
+    const limitNum = dto.limit 
+      ? (typeof dto.limit === 'string' ? parseInt(dto.limit, 10) : Number(dto.limit))
+      : 20;
+    
+    // Ensure we have valid numbers (not NaN)
+    const page = isNaN(pageNum) || pageNum < 1 ? 1 : pageNum;
+    const limit = isNaN(limitNum) || limitNum < 1 ? 20 : limitNum;
+    const skip = (page - 1) * limit;
 
     let isPublished: boolean | undefined;
 
@@ -93,7 +105,7 @@ export class ExamService {
       collegeSessionId: dto.collegeSessionId,
       isPublished,
       skip,
-      take: dto.limit,
+      take: limit,
     });
   }
 

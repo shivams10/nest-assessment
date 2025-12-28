@@ -12,10 +12,13 @@ export interface StartExamRequest {
 }
 
 export interface StartExamResponse {
-  submissionId: string
+  id: string // submissionId
   examId: string
-  startedAt: string
-  expiresAt: string
+  examSetId: string
+  startedAt: string | null
+  submittedAt: string | null
+  autoSubmitted: boolean
+  createdAt: string
 }
 
 /**
@@ -26,11 +29,27 @@ export async function startExamService(
   data: StartExamRequest,
 ): Promise<StartExamResponse> {
   try {
-    const response = await apiClient.post<StartExamResponse>(
-      '/exam-attempts/start',
-      data,
-    )
-    return response.data
+    const response = await apiClient.post<{
+      id: string
+      examId: string
+      examSetId: string
+      startedAt: Date | null
+      submittedAt: Date | null
+      autoSubmitted: boolean
+      createdAt: Date
+    }>('/exam-attempts/start', data)
+    
+    // Transform backend response
+    const backendData = response.data
+    return {
+      id: backendData.id,
+      examId: backendData.examId,
+      examSetId: backendData.examSetId,
+      startedAt: backendData.startedAt ? new Date(backendData.startedAt).toISOString() : null,
+      submittedAt: backendData.submittedAt ? new Date(backendData.submittedAt).toISOString() : null,
+      autoSubmitted: backendData.autoSubmitted,
+      createdAt: new Date(backendData.createdAt).toISOString(),
+    }
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>
     const errorMessage =
