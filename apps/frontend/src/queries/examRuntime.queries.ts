@@ -35,9 +35,10 @@ export const examRuntimeKeys = {
  */
 export function useExam(submissionId: string | undefined) {
   return useQuery({
-    queryKey: examRuntimeKeys.exam(submissionId!),
+    queryKey: examRuntimeKeys.exam(submissionId || ''),
     queryFn: async () => {
-      const examData = await getExamService(submissionId!)
+      if (!submissionId) throw new Error('Submission ID is required')
+      const examData = await getExamService(submissionId)
       
       // Calculate expiresAt if we have startedAt
       // We need exam duration - for now, we'll need to get it from exam metadata
@@ -67,16 +68,16 @@ export function useExamMeta(examId: string | undefined) {
       // Try to get from exam list first, or use a placeholder
       // Backend may need GET /exams/:id endpoint
       const exams = await listExamsService({ limit: 100 }, false)
-      const exam = exams.data.find((e) => e.id === examId)
+      const exam = exams?.data?.find((e) => e?.id === examId)
       if (!exam) {
         throw new Error('Exam not found')
       }
       return {
-        id: exam.id,
-        title: exam.title,
-        description: exam.description,
-        durationSeconds: exam.durationSeconds,
-        instructions: exam.description || 'Please read all questions carefully before answering.',
+        id: exam?.id || '',
+        title: exam?.title || '',
+        description: exam?.description,
+        durationSeconds: exam?.durationSeconds || 3600,
+        instructions: exam?.description || 'Please read all questions carefully before answering.',
       }
     },
     enabled: !!examId,
@@ -110,7 +111,10 @@ export function useSubmitExam(submissionId: string | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => submitExamService(submissionId!),
+    mutationFn: () => {
+      if (!submissionId) throw new Error('Submission ID is required')
+      return submitExamService(submissionId)
+    },
     onSuccess: () => {
       if (submissionId) {
         // Prefetch candidate result for better UX
@@ -149,8 +153,11 @@ export function useStartExam() {
  */
 export function useExamResult(submissionId: string | undefined) {
   return useQuery({
-    queryKey: examRuntimeKeys.result(submissionId!),
-    queryFn: () => getExamResultService(submissionId!),
+    queryKey: examRuntimeKeys.result(submissionId || ''),
+    queryFn: () => {
+      if (!submissionId) throw new Error('Submission ID is required')
+      return getExamResultService(submissionId)
+    },
     enabled: !!submissionId,
   })
 }

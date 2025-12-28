@@ -24,7 +24,7 @@ export function CreateExamPage() {
     return <LoadingState message="Loading sessions..." />
   }
 
-  if (!sessionsData || sessionsData.data.length === 0) {
+  if (!sessionsData || !sessionsData.data || sessionsData.data.length === 0) {
     return (
       <ErrorState
         message="No recruitment sessions found. Please create a session first."
@@ -61,7 +61,7 @@ export function CreateExamPage() {
         <ExamForm
           onSubmit={handleSubmit}
           isLoading={createExamMutation.isPending}
-          sessions={sessionsData.data}
+          sessions={sessionsData?.data || []}
         />
       </div>
     </div>

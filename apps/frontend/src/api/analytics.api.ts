@@ -60,13 +60,13 @@ async function aggregateAnalyticsData(): Promise<AnalyticsData> {
   ])
 
   // Calculate summary
-  const totalCandidates = usersResponse.data.filter(
-    (user) => user.role === 'candidate',
+  const totalCandidates = (usersResponse?.data || []).filter(
+    (user) => user?.role === 'candidate',
   ).length
-  const totalExams = examsResponse.data.length
-  const totalSubmissions = resultsResponse.items.length
-  const selectedForNextRound = resultsResponse.items.filter(
-    (result) => result.selectedForNextRound,
+  const totalExams = (examsResponse?.data || []).length
+  const totalSubmissions = (resultsResponse?.items || []).length
+  const selectedForNextRound = (resultsResponse?.items || []).filter(
+    (result) => result?.selectedForNextRound,
   ).length
 
   const summary: AnalyticsSummary = {
@@ -77,36 +77,44 @@ async function aggregateAnalyticsData(): Promise<AnalyticsData> {
   }
 
   // Calculate exam-wise statistics
-  const examStatsMap = new Map<string, {
+  type ExamStatsMapValue = {
     examId: string
     examTitle: string
     submissions: number[]
     selectedCount: number
-  }>()
+  }
+  const examStatsMap = new Map<string, ExamStatsMapValue>()
 
   // Initialize map with all exams
-  examsResponse.data.forEach((exam) => {
-    examStatsMap.set(exam.id, {
-      examId: exam.id,
-      examTitle: exam.title,
-      submissions: [],
-      selectedCount: 0,
-    })
+  const examsData = examsResponse?.data || []
+  examsData.forEach((exam: { id?: string; title?: string }) => {
+    if (exam?.id) {
+      examStatsMap.set(exam.id, {
+        examId: exam.id,
+        examTitle: exam?.title || '',
+        submissions: [],
+        selectedCount: 0,
+      })
+    }
   })
 
   // Aggregate results by exam
-  resultsResponse.items.forEach((result) => {
-    const stats = examStatsMap.get(result.examId)
-    if (stats) {
-      stats.submissions.push(result.totalMarks)
-      if (result.selectedForNextRound) {
-        stats.selectedCount++
+  const resultsItems = resultsResponse?.items || []
+  resultsItems.forEach((result: { examId?: string; totalMarks?: number; selectedForNextRound?: boolean }) => {
+    if (result?.examId) {
+      const stats = examStatsMap.get(result.examId)
+      if (stats) {
+        stats.submissions.push(result?.totalMarks || 0)
+        if (result?.selectedForNextRound) {
+          stats.selectedCount++
+        }
       }
     }
   })
 
   // Calculate statistics for each exam
-  const examStats: ExamStatistics[] = Array.from(examStatsMap.values())
+  const examStatsValues = Array.from<ExamStatsMapValue>(examStatsMap.values())
+  const examStats: ExamStatistics[] = examStatsValues
     .map((stats) => {
       const submissions = stats.submissions
       if (submissions.length === 0) {
@@ -121,7 +129,7 @@ async function aggregateAnalyticsData(): Promise<AnalyticsData> {
         }
       }
 
-      const sum = submissions.reduce((acc, score) => acc + score, 0)
+      const sum = submissions.reduce((acc: number, score: number) => acc + score, 0)
       const averageScore = sum / submissions.length
       const highestScore = Math.max(...submissions)
       const lowestScore = Math.min(...submissions)

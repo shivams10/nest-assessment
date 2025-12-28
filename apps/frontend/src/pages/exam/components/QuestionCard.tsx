@@ -36,7 +36,7 @@ export function QuestionCard({
         </div>
 
         <div className="ml-6 space-y-2">
-          {question.options.map((option) => (
+          {(question?.options || []).map((option) => (
             <OptionItem
               key={option.id}
               optionId={option.id}

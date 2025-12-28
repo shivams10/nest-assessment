@@ -96,7 +96,7 @@ export function AdminResultsPage() {
     )
   }
 
-  if (!data || data.items.length === 0) {
+  if (!data || !data.items || data.items.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -112,7 +112,7 @@ export function AdminResultsPage() {
     )
   }
 
-  const { items, meta } = data
+  const { items, meta } = data || { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }
 
   return (
     <div className="space-y-6">
@@ -127,7 +127,7 @@ export function AdminResultsPage() {
           variant="outline"
           onClick={() => {
             // Get unique exam IDs from results
-            const examIds = [...new Set(items.map((r) => r.examId))]
+            const examIds = [...new Set(items?.map((r) => r.examId) || [])]
             if (examIds.length > 0) {
               setSelectedExamId(examIds[0])
               setShowRecalculateDialog(true)
@@ -282,12 +282,12 @@ export function AdminResultsPage() {
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium">
-                          {result.candidate.firstName && result.candidate.lastName
+                          {result.candidate?.firstName && result.candidate?.lastName
                             ? `${result.candidate.firstName} ${result.candidate.lastName}`
-                            : result.candidate.email || 'N/A'}
+                            : result.candidate?.email || 'N/A'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {result.candidate.email}
+                          {result.candidate?.email || 'N/A'}
                         </p>
                       </div>
                     </TableCell>

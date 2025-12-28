@@ -77,7 +77,7 @@ export function AdminAnalyticsPage() {
     return <EmptyState description="No analytics data available" />
   }
 
-  const { summary, examStats } = data
+  const { summary, examStats } = data || { summary: { totalCandidates: 0, totalExams: 0, totalSubmissions: 0, selectedForNextRound: 0 }, examStats: [] }
 
   return (
     <div className="space-y-6">
@@ -107,17 +107,17 @@ export function AdminAnalyticsPage() {
         />
         <StatsCard
           title="Selected for Next Round"
-          value={summary.selectedForNextRound}
+          value={summary?.selectedForNextRound || 0}
           description={`${
-            summary.totalSubmissions > 0
-              ? Math.round((summary.selectedForNextRound / summary.totalSubmissions) * 100)
+            (summary?.totalSubmissions || 0) > 0
+              ? Math.round(((summary?.selectedForNextRound || 0) / (summary?.totalSubmissions || 1)) * 100)
               : 0
           }% selection rate`}
         />
       </div>
 
       {/* Exam Statistics */}
-      {examStats.length > 0 ? (
+      {examStats && examStats.length > 0 ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <SimpleBarChart
             title="Average Scores by Exam"
@@ -136,7 +136,7 @@ export function AdminAnalyticsPage() {
       )}
 
       {/* Exam Details Table */}
-      {examStats.length > 0 && (
+      {examStats && examStats.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Exam Performance Details</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

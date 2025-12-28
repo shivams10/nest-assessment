@@ -39,8 +39,9 @@ export function useExamTimer(
     }
 
     const updateTimer = () => {
+      if (!expiresAt) return
       const now = new Date().getTime()
-      const expires = new Date(expiresAt!).getTime()
+      const expires = new Date(expiresAt).getTime()
       const remaining = Math.max(0, Math.floor((expires - now) / 1000))
 
       setTimeRemaining(remaining)
