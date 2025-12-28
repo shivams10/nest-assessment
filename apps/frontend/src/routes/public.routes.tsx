@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom'
-import { ROUTES } from '@/constants'
+import { ROUTES, TEXT } from '@/constants'
 import { AuthGuard } from './AuthGuard'
 
 /**
@@ -18,6 +18,24 @@ export const publicRoutes: RouteObject[] = [
         },
       },
     ],
+  },
+  {
+    path: ROUTES.UNAUTHORIZED,
+    lazy: async () => {
+      const UnauthorizedPage = () => (
+        <div className="flex min-h-screen items-center justify-center p-4 overflow-x-hidden">
+          <div className="text-center max-w-md mx-auto">
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              {TEXT.ADMIN.UNAUTHORIZED_TITLE}
+            </h1>
+            <p className="mt-4 text-sm sm:text-base text-muted-foreground">
+              {TEXT.ADMIN.UNAUTHORIZED_MESSAGE}
+            </p>
+          </div>
+        </div>
+      )
+      return { Component: UnauthorizedPage }
+    },
   },
 ]
 

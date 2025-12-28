@@ -8,6 +8,7 @@ interface JWTPayload {
   iat?: number
   sub?: string
   role?: string
+  email?: string
   [key: string]: unknown
 }
 
@@ -80,3 +81,12 @@ export function getUserIdFromToken(token: string): string | null {
   return (payload?.sub as string) || null
 }
 
+/**
+ * Extracts email from JWT token
+ * @param token - The JWT token string
+ * @returns Email string or null if not found
+ */
+export function getEmailFromToken(token: string): string | null {
+  const payload = decodeJWT(token)
+  return (payload?.email as string) || null
+}

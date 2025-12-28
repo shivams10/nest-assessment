@@ -11,7 +11,7 @@ import {
   logout,
   checkTokenValidity,
 } from '@/store/slices/auth.slice'
-import { isTokenExpired } from './jwt'
+import { isTokenExpired, getEmailFromToken } from './jwt'
 
 /**
  * Sets the authentication token in Redux store and localStorage
@@ -98,5 +98,17 @@ export function isAuthenticated(): boolean {
 export function hasRole(role: string): boolean {
   const userRole = getAuthRole()
   return userRole === role
+}
+
+/**
+ * Gets the current user email from JWT token
+ * @returns Email string or null if not found
+ */
+export function getAuthEmail(): string | null {
+  const token = getAuthToken()
+  if (!token) {
+    return null
+  }
+  return getEmailFromToken(token)
 }
 

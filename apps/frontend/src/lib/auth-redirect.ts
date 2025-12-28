@@ -1,4 +1,4 @@
-import { ROUTES } from '@/constants'
+import { ROUTES, ROLES, ADMIN_ROLES, type UserRole } from '@/constants'
 import { getAuthRole } from './auth'
 
 /**
@@ -13,14 +13,14 @@ import { getAuthRole } from './auth'
 export function getRedirectRouteByRole(): string {
   const role = getAuthRole()
 
-  switch (role) {
-    case 'admin':
-    case 'moderator':
-      return ROUTES.ADMIN
-    case 'candidate':
-      return ROUTES.CANDIDATE
-    default:
-      return ROUTES.HOME
+  if (role && ADMIN_ROLES.includes(role as UserRole)) {
+    return ROUTES.ADMIN
   }
+
+  if (role === ROLES.CANDIDATE) {
+    return ROUTES.CANDIDATE
+  }
+
+  return ROUTES.HOME
 }
 

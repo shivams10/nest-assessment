@@ -7,6 +7,7 @@
 export const ROUTES = {
   // Public routes
   LOGIN: '/login',
+  UNAUTHORIZED: '/unauthorized',
   
   // Protected routes
   HOME: '/',
