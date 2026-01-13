@@ -35,7 +35,7 @@ export function ExamListPage() {
     return (
       <EmptyState
         title="No exams available"
-        description="There are no published exams at the moment."
+        description="You are not assigned to any active recruitment drive yet, or there are no published exams in your assigned session. Please contact an administrator for assistance."
       />
     )
   }

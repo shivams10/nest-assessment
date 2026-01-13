@@ -148,7 +148,7 @@ export async function updateExamService(
  */
 export async function publishExamService(examId: string): Promise<Exam> {
   try {
-    const response = await apiClient.post<Exam>(`/admin/exams/${examId}/publish`)
+    const response = await apiClient.patch<Exam>(`/exams/${examId}/publish`)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>
@@ -185,7 +185,7 @@ export async function publishExamService(examId: string): Promise<Exam> {
  */
 export async function unpublishExamService(examId: string): Promise<Exam> {
   try {
-    const response = await apiClient.post<Exam>(`/admin/exams/${examId}/unpublish`)
+    const response = await apiClient.patch<Exam>(`/exams/${examId}/unpublish`)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>

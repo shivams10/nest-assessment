@@ -24,6 +24,12 @@ JWT_ACCESS_SECRET="your-secret-key"
 JWT_ACCESS_EXPIRES_IN="15m"
 JWT_REFRESH_SECRET="your-refresh-secret"
 JWT_REFRESH_EXPIRES_IN="7d"
+FRONTEND_URL="http://localhost:5173"
+
+# Optional: Google OAuth (if using Google login)
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 ```
 
 ### 3. Install & Setup Database

@@ -30,6 +30,42 @@ export class ExamService {
   }
 
   /**
+   * List published exams for a candidate based on their assigned session
+   */
+  async listExamsForCandidate(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      select: { collegeSessionId: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // If candidate has no session assigned, return empty list
+    if (!user.collegeSessionId) {
+      return {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+      };
+    }
+
+    // Get published exams for the candidate's session
+    const exams = await this.examRepository.findPublishedBySession(
+      user.collegeSessionId,
+    );
+
+    return {
+      data: exams,
+      total: exams.length,
+      page: 1,
+      limit: 20,
+    };
+  }
+
+  /**
    * Validate exam readiness for publishing
    * Returns validation result with reasons
    */

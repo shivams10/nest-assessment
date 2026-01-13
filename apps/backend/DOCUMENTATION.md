@@ -134,6 +134,14 @@ JWT_ACCESS_SECRET="your-access-secret-key"
 JWT_ACCESS_EXPIRES_IN="15m"
 JWT_REFRESH_SECRET="your-refresh-secret-key"
 JWT_REFRESH_EXPIRES_IN="7d"
+
+# Frontend URL (for OAuth redirects)
+FRONTEND_URL="http://localhost:5173"
+
+# Optional: Google OAuth Configuration
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 ```
 
 ### Installation Steps

@@ -127,6 +127,14 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
+                path: ROUTES.ADMIN_SESSIONS_DETAIL,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminSessionDetailPage } = await import('@/pages/admin/sessions/AdminSessionDetailPage')
+                  return { Component: AdminSessionDetailPage }
+                },
+              },
+              {
                 path: `${ROUTES.ADMIN}/candidates`,
                 errorElement: <ErrorPage />,
                 lazy: async () => {

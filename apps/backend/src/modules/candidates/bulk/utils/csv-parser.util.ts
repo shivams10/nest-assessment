@@ -8,7 +8,9 @@ export interface ParsedCandidateRow {
 
 interface RawCsvRow {
   email?: string;
+  firstName?: string;
   first_name?: string;
+  lastName?: string;
   last_name?: string;
 }
 
@@ -21,7 +23,7 @@ export function parseCandidateCsv(buffer: Buffer): ParsedCandidateRow[] {
 
   return records.map((row: RawCsvRow) => ({
     email: (row.email ?? '').toLowerCase(),
-    firstName: row.first_name ?? '',
-    lastName: row.last_name ?? '',
+    firstName: row.firstName ?? row.first_name ?? '',
+    lastName: row.lastName ?? row.last_name ?? '',
   }));
 }

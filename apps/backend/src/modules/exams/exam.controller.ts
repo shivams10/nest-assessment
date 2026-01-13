@@ -35,6 +35,12 @@ export class ExamsController {
     return this.examService.listExamsForAdmin(query);
   }
 
+  @Get()
+  @Roles('candidate')
+  listExamsForCandidate(@GetUser('sub') userId: string) {
+    return this.examService.listExamsForCandidate(userId);
+  }
+
   @Patch(':id/publish')
   @Roles('admin', 'moderator')
   publishExam(@Param('id') id: string) {

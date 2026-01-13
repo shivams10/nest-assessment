@@ -8,4 +8,8 @@ export const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().regex(jwtDurationRegex),
   JWT_REFRESH_SECRET: z.string().min(1),
   JWT_REFRESH_EXPIRES_IN: z.string().regex(jwtDurationRegex),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().optional(),
+  FRONTEND_URL: z.string().optional(),
 });

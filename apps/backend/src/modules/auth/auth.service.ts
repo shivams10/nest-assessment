@@ -94,4 +94,51 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  /**
+   * Generate tokens for a user (reused by Google OAuth login)
+   */
+  async generateTokens(user: { id: string; role: string }): Promise<AuthTokens> {
+    const payload: JwtPayload = {
+      sub: user.id,
+      role: user.role,
+    };
+
+    const accessTokenOptions: JwtSignOptions = {
+      secret: this.configService.jwtAccessSecret,
+      expiresIn: this.configService.jwtAccessExpiresIn,
+    };
+
+    const refreshTokenOptions: JwtSignOptions = {
+      secret: this.configService.jwtRefreshSecret,
+      expiresIn: this.configService.jwtRefreshExpiresIn,
+    };
+
+    const accessToken = await this.jwtService.signAsync(
+      payload,
+      accessTokenOptions,
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      payload,
+      refreshTokenOptions,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  /**
+   * Login with Google OAuth user
+   */
+  async loginWithGoogle(user: { id: string; role: string; isActive: boolean; deletedAt: Date | null }): Promise<AuthTokens> {
+    // Validate user is active and not deleted
+    if (!user.isActive || user.deletedAt !== null) {
+      throw new UnauthorizedException('Account is inactive or deleted');
+    }
+
+    return this.generateTokens(user);
+  }
 }
