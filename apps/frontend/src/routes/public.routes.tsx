@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom'
 import { ROUTES, TEXT } from '@/constants'
 import { AuthGuard } from './AuthGuard'
+import { ErrorPage } from '@/pages/ErrorPage'
 
 /**
  * Public routes - accessible without authentication
@@ -18,6 +19,14 @@ export const publicRoutes: RouteObject[] = [
         },
       },
     ],
+  },
+  {
+    path: ROUTES.OAUTH_CALLBACK,
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      const { OAuthCallbackPage } = await import('@/pages/auth/OAuthCallbackPage')
+      return { Component: OAuthCallbackPage }
+    },
   },
   {
     path: ROUTES.UNAUTHORIZED,

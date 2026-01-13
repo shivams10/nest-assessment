@@ -90,6 +90,15 @@ export function SessionsTable({
             <TableCell>
               <div className="flex gap-2">
                 <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() =>
+                    navigate(ROUTES.ADMIN_SESSIONS_DETAIL.replace(':sessionId', session.id))
+                  }
+                >
+                  View
+                </Button>
+                <Button
                   variant="outline"
                   size="sm"
                   onClick={() =>

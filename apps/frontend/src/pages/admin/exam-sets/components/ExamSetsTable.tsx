@@ -9,8 +9,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { SubmitDialog } from '@/pages/exam/components/SubmitDialog'
-import type { ExamSet } from '@/types/examSet.types'
+import { useUpdateExamSetSection, useCreateExamSetSection } from '@/queries/examSets.queries'
+import { CreateSectionDialog } from './CreateSectionDialog'
+import { ROUTES } from '@/constants'
+import type { ExamSet, SectionType } from '@/types/examSet.types'
 
 interface ExamSetsTableProps {
   examSets: ExamSet[]
@@ -18,10 +22,11 @@ interface ExamSetsTableProps {
   onDelete?: (setId: string) => void
   isDeleting?: boolean
   isPublished?: boolean
+  onSectionCreated?: () => void
 }
 
 /**
- * ExamSetsTable - Table component for displaying exam sets
+ * ExamSetsTable - Table component for displaying exam sets with inline editing
  */
 export function ExamSetsTable({
   examSets,
@@ -29,10 +34,21 @@ export function ExamSetsTable({
   onDelete,
   isDeleting = false,
   isPublished = false,
+  onSectionCreated,
 }: ExamSetsTableProps) {
   const navigate = useNavigate()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null)
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState<string>('')
+  const [showCreateSectionDialog, setShowCreateSectionDialog] = useState(false)
+  const [selectedSetForSection, setSelectedSetForSection] = useState<{
+    setId: string
+    sectionType: SectionType
+  } | null>(null)
+
+  const updateSectionMutation = useUpdateExamSetSection()
+  const createSectionMutation = useCreateExamSetSection()
 
   if (isLoading) {
     return (
@@ -65,6 +81,63 @@ export function ExamSetsTable({
     }
   }
 
+  const handleEditClick = (sectionId: string, currentCount: number) => {
+    setEditingSectionId(sectionId)
+    setEditingValue(currentCount.toString())
+  }
+
+  const handleSaveEdit = (sectionId: string) => {
+    const newCount = parseInt(editingValue, 10)
+    if (isNaN(newCount) || newCount < 1) {
+      alert('Question count must be at least 1')
+      return
+    }
+
+    updateSectionMutation.mutate(
+      {
+        sectionId,
+        data: { questionCount: newCount },
+      },
+      {
+        onSuccess: () => {
+          setEditingSectionId(null)
+          setEditingValue('')
+        },
+      },
+    )
+  }
+
+  const handleCancelEdit = () => {
+    setEditingSectionId(null)
+    setEditingValue('')
+  }
+
+  const handleCreateSectionClick = (setId: string, sectionType: SectionType) => {
+    setSelectedSetForSection({ setId, sectionType })
+    setShowCreateSectionDialog(true)
+  }
+
+  const handleCreateSection = (sectionType: SectionType, questionCount: number) => {
+    if (!selectedSetForSection) return
+
+    createSectionMutation.mutate(
+      {
+        examSetId: selectedSetForSection.setId,
+        sectionType,
+        questionCount,
+      },
+      {
+        onSuccess: () => {
+          setShowCreateSectionDialog(false)
+          setSelectedSetForSection(null)
+          if (onSectionCreated) {
+            onSectionCreated()
+          }
+        },
+      },
+    )
+  }
+
   return (
     <>
       <Table>
@@ -86,25 +159,144 @@ export function ExamSetsTable({
               <TableRow key={set.id}>
                 <TableCell className="font-medium">{set.name}</TableCell>
                 <TableCell>
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-2 text-sm">
                     <div>
                       Aptitude:{' '}
                       {aptitudeSection ? (
-                        <span className="text-muted-foreground">
-                          {aptitudeSection.questionCount} questions
+                        <span className="flex items-center gap-2">
+                          {editingSectionId === aptitudeSection.id ? (
+                            <>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                className="h-8 w-20"
+                                disabled={updateSectionMutation.isPending}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSaveEdit(aptitudeSection.id)}
+                                disabled={updateSectionMutation.isPending}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleCancelEdit}
+                                disabled={updateSectionMutation.isPending}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-muted-foreground">
+                                {aptitudeSection.assignedQuestionsCount ?? 0} /{' '}
+                                {aptitudeSection.questionCount} assigned
+                              </span>
+                              {!isPublished && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleEditClick(aptitudeSection.id, aptitudeSection.questionCount)
+                                  }
+                                  className="ml-2 h-6 px-2 text-xs"
+                                >
+                                  Edit
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </span>
                       ) : (
-                        <span className="text-destructive">Missing</span>
+                        <span className="flex items-center gap-2">
+                          <span className="text-destructive">Missing</span>
+                          {!isPublished && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCreateSectionClick(set.id, 'aptitude')}
+                              className="h-6 px-2 text-xs"
+                            >
+                              Create
+                            </Button>
+                          )}
+                        </span>
                       )}
                     </div>
                     <div>
                       Technical:{' '}
                       {technicalSection ? (
-                        <span className="text-muted-foreground">
-                          {technicalSection.questionCount} questions
+                        <span className="flex items-center gap-2">
+                          {editingSectionId === technicalSection.id ? (
+                            <>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                className="h-8 w-20"
+                                disabled={updateSectionMutation.isPending}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSaveEdit(technicalSection.id)}
+                                disabled={updateSectionMutation.isPending}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleCancelEdit}
+                                disabled={updateSectionMutation.isPending}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-muted-foreground">
+                                {technicalSection.assignedQuestionsCount ?? 0} /{' '}
+                                {technicalSection.questionCount} assigned
+                              </span>
+                              {!isPublished && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleEditClick(
+                                      technicalSection.id,
+                                      technicalSection.questionCount,
+                                    )
+                                  }
+                                  className="ml-2 h-6 px-2 text-xs"
+                                >
+                                  Edit
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </span>
                       ) : (
-                        <span className="text-destructive">Missing</span>
+                        <span className="flex items-center gap-2">
+                          <span className="text-destructive">Missing</span>
+                          {!isPublished && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCreateSectionClick(set.id, 'technical')}
+                              className="h-6 px-2 text-xs"
+                            >
+                              Create
+                            </Button>
+                          )}
+                        </span>
                       )}
                     </div>
                     {hasBothSections && (
@@ -123,8 +315,12 @@ export function ExamSetsTable({
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        // Navigate to questions assignment page
-                        navigate(`/admin/exams/${set.examId}/sets/${set.id}/questions`)
+                        navigate(
+                          ROUTES.ADMIN_EXAM_SET_QUESTIONS.replace(':examId', set.examId).replace(
+                            ':setId',
+                            set.id,
+                          ),
+                        )
                       }}
                     >
                       Manage Questions
@@ -159,7 +355,16 @@ export function ExamSetsTable({
           variant="destructive"
         />
       )}
+
+      {showCreateSectionDialog && selectedSetForSection && (
+        <CreateSectionDialog
+          open={showCreateSectionDialog}
+          onOpenChange={setShowCreateSectionDialog}
+          onSubmit={handleCreateSection}
+          sectionType={selectedSetForSection.sectionType}
+          isLoading={createSectionMutation.isPending}
+        />
+      )}
     </>
   )
 }
-

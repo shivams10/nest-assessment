@@ -30,4 +30,20 @@ export class ConfigService {
   get jwtRefreshExpiresIn(): StringValue {
     return this.env.JWT_REFRESH_EXPIRES_IN;
   }
+
+  get googleClientId(): string | undefined {
+    return this.env.GOOGLE_CLIENT_ID;
+  }
+
+  get googleClientSecret(): string | undefined {
+    return this.env.GOOGLE_CLIENT_SECRET;
+  }
+
+  get googleCallbackUrl(): string | undefined {
+    return this.env.GOOGLE_CALLBACK_URL;
+  }
+
+  get frontendUrl(): string | undefined {
+    return this.env.FRONTEND_URL;
+  }
 }

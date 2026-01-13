@@ -53,6 +53,31 @@ export async function listExamsService(
  * Get exam by ID service
  * GET /admin/exams/:id
  */
+/**
+ * Get exam readiness status
+ * GET /admin/exams/:id/readiness
+ */
+export async function getExamReadinessService(
+  id: string,
+): Promise<{ isReady: boolean; reasons: string[] }> {
+  try {
+    const response = await apiClient.get<{ isReady: boolean; reasons: string[] }>(
+      `/admin/exams/${id}/readiness`,
+    )
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to fetch exam readiness'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
 export async function getExamService(id: string): Promise<Exam> {
   try {
     const response = await apiClient.get<Exam>(`/admin/exams/${id}`)
@@ -123,13 +148,29 @@ export async function updateExamService(
  */
 export async function publishExamService(examId: string): Promise<Exam> {
   try {
-    const response = await apiClient.post<Exam>(`/admin/exams/${examId}/publish`)
+    const response = await apiClient.patch<Exam>(`/exams/${examId}/publish`)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorData = axiosError.response?.data
+    
+    // Handle structured error response (EXAM_NOT_READY)
+    if (errorData?.code === 'EXAM_NOT_READY' && errorData?.reasons) {
+      const { ExamPublishError } = await import('@/utils/examError')
+      const examError = new ExamPublishError(
+        errorData.message || 'Exam is not ready to be published',
+        errorData.code,
+        errorData.reasons,
+        axiosError.response?.status,
+      )
+      console.log('Throwing ExamPublishError:', examError)
+      throw examError
+    }
+    
+    // Fallback to generic error
     const errorMessage =
-      axiosError.response?.data?.message ||
-      axiosError.response?.data?.error ||
+      errorData?.message ||
+      errorData?.error ||
       axiosError.message ||
       'Failed to publish exam'
     const customError = new Error(errorMessage)
@@ -144,7 +185,7 @@ export async function publishExamService(examId: string): Promise<Exam> {
  */
 export async function unpublishExamService(examId: string): Promise<Exam> {
   try {
-    const response = await apiClient.post<Exam>(`/admin/exams/${examId}/unpublish`)
+    const response = await apiClient.patch<Exam>(`/exams/${examId}/unpublish`)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>

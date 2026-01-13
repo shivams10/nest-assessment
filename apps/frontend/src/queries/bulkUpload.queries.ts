@@ -33,10 +33,11 @@ export function useBulkUploadQuestions() {
     onSuccess: (data) => {
       // Invalidate questions list after successful upload
       queryClient.invalidateQueries({ queryKey: ['questions'] })
-      // Start polling for status if upload is processing
-      if (data.status === 'processing' || data.status === 'pending') {
-        queryClient.setQueryData(bulkUploadKeys.status(data.id), data)
-      }
+      // Start polling for status
+      queryClient.setQueryData(bulkUploadKeys.status(data.uploadId), {
+        id: data.uploadId,
+        status: 'processing' as const,
+      })
     },
   })
 }

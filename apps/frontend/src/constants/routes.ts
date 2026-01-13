@@ -8,6 +8,7 @@ export const ROUTES = {
   // Public routes
   LOGIN: '/login',
   UNAUTHORIZED: '/unauthorized',
+  OAUTH_CALLBACK: '/auth/callback',
   
   // Protected routes
   HOME: '/',
@@ -28,6 +29,7 @@ export const ROUTES = {
   ADMIN_SESSIONS: '/admin/sessions',
   ADMIN_SESSIONS_NEW: '/admin/sessions/new',
   ADMIN_SESSIONS_EDIT: '/admin/sessions/:id/edit',
+  ADMIN_SESSIONS_DETAIL: '/admin/sessions/:sessionId',
   ADMIN_EXAMS: '/admin/exams',
   ADMIN_EXAMS_NEW: '/admin/exams/new',
   ADMIN_EXAMS_EDIT: '/admin/exams/:id/edit',

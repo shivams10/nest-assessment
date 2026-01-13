@@ -73,8 +73,8 @@ export default function LoginPage() {
   const isSubmitting = loginMutation.isPending
 
   const handleGoogleSignIn = () => {
-    // TODO: Implement Google OAuth when ready
-    console.log('Google sign in clicked')
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+    window.location.href = `${apiBaseUrl}/auth/google`
   }
 
   return (

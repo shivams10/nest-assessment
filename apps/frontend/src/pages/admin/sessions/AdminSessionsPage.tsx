@@ -41,29 +41,8 @@ export function AdminSessionsPage() {
     )
   }
 
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Recruitment Sessions</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Manage recruitment sessions for organizing exams
-            </p>
-          </div>
-          <Button onClick={() => navigate(ROUTES.ADMIN_SESSIONS_NEW)}>
-            Create Session
-          </Button>
-        </div>
-        <EmptyState
-          title="No sessions found"
-          description="Create your first recruitment session to get started."
-        />
-      </div>
-    )
-  }
-
   const totalPages = data?.limit && data?.total ? Math.ceil(data.total / data.limit) : 1
+  const hasData = data?.data && data.data.length > 0
 
   return (
     <div className="space-y-6">
@@ -79,41 +58,48 @@ export function AdminSessionsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sessions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <SessionsTable
-            sessions={data?.data || []}
-            isLoading={isLoading}
-            onDelete={handleDelete}
-            isDeleting={deleteSessionMutation.isPending}
-          />
+      {hasData ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sessions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SessionsTable
+              sessions={data.data}
+              isLoading={isLoading}
+              onDelete={handleDelete}
+              isDeleting={deleteSessionMutation.isPending}
+            />
 
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <EmptyState
+          title="No sessions found"
+          description="Create your first recruitment session to get started."
+        />
+      )}
     </div>
   )
 }

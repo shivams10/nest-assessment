@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAdminExams, usePublishExam, useUnpublishExam, useDeleteExam } from '@/queries/exams.queries'
+import {
+  useAdminExams,
+  usePublishExam,
+  useUnpublishExam,
+  useDeleteExam,
+} from '@/queries/exams.queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -33,8 +38,27 @@ export function AdminExamsPage() {
   const unpublishExamMutation = useUnpublishExam()
   const deleteExamMutation = useDeleteExam()
 
-  const handlePublish = (examId: string) => {
-    publishExamMutation.mutate(examId)
+  const handlePublish = (
+    examId: string,
+    onError?: (error: Error) => void,
+    onSuccess?: () => void,
+  ) => {
+    publishExamMutation.mutate(examId, {
+      onError: (error) => {
+        console.error('Publish exam error:', error)
+        // Call the callback to set error in component
+        if (onError) {
+          onError(error)
+        }
+      },
+      onSuccess: () => {
+        console.log('Exam published successfully')
+        // Call the callback to close dialog in component
+        if (onSuccess) {
+          onSuccess()
+        }
+      },
+    })
   }
 
   const handleUnpublish = (examId: string) => {
@@ -58,29 +82,8 @@ export function AdminExamsPage() {
     )
   }
 
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Exam Management</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create and manage exams, exam sets, and questions
-            </p>
-          </div>
-          <Button onClick={() => navigate(ROUTES.ADMIN_EXAMS_NEW)}>
-            Create Exam
-          </Button>
-        </div>
-        <EmptyState
-          title="No exams found"
-          description="Create your first exam to get started."
-        />
-      </div>
-    )
-  }
-
-  const totalPages = data.limit > 0 ? Math.ceil(data.total / data.limit) : 1
+  const totalPages = data?.limit && data?.total ? Math.ceil(data.total / data.limit) : 1
+  const hasData = data?.data && data.data.length > 0
 
   return (
     <div className="space-y-6">
@@ -134,45 +137,56 @@ export function AdminExamsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Exams</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ExamsTable
-            exams={data.data}
-            isLoading={isLoading}
-            onPublish={handlePublish}
-            onUnpublish={handleUnpublish}
-            onDelete={handleDelete}
-            isPublishing={publishExamMutation.isPending}
-            isUnpublishing={unpublishExamMutation.isPending}
-            isDeleting={deleteExamMutation.isPending}
-          />
+      {hasData ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Exams</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ExamsTable
+              exams={data.data}
+              isLoading={isLoading}
+              onPublish={handlePublish}
+              onUnpublish={handleUnpublish}
+              onDelete={handleDelete}
+              isPublishing={publishExamMutation.isPending}
+              isUnpublishing={unpublishExamMutation.isPending}
+              isDeleting={deleteExamMutation.isPending}
+            />
 
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <EmptyState
+          title="No exams found"
+          description={
+            sessionFilter || statusFilter
+              ? 'No exams match your filters. Try adjusting your search criteria.'
+              : 'Create your first exam to get started.'
+          }
+        />
+      )}
     </div>
   )
 }

@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useExamSets, useCreateExamSet, useDeleteExamSet } from '@/queries/examSets.queries'
-import { useExam } from '@/queries/exams.queries'
+import { useExam, useExamReadiness } from '@/queries/exams.queries'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ReadinessPanel } from '@/components/shared/ReadinessPanel'
 import { ExamSetsTable } from './components/ExamSetsTable'
 import { CreateExamSetDialog } from './components/CreateExamSetDialog'
 import { ROUTES } from '@/constants'
@@ -25,9 +26,27 @@ export function AdminExamSetsPage() {
     { examId: examId || '' },
     { enabled: !!examId },
   )
+  const {
+    data: readinessData,
+    isLoading: readinessLoading,
+    refetch: refetchReadiness,
+  } = useExamReadiness(examId)
 
   const createExamSetMutation = useCreateExamSet()
   const deleteExamSetMutation = useDeleteExamSet()
+
+  // Refetch readiness when sets or sections change
+  useEffect(() => {
+    if (createExamSetMutation.isSuccess || deleteExamSetMutation.isSuccess) {
+      refetchReadiness()
+      refetch() // Also refetch exam sets to show new sections
+    }
+  }, [createExamSetMutation.isSuccess, deleteExamSetMutation.isSuccess, refetchReadiness, refetch])
+
+  const handleSectionCreated = () => {
+    refetch()
+    refetchReadiness()
+  }
 
   const handleCreate = (name: string) => {
     if (!examId) return
@@ -99,6 +118,14 @@ export function AdminExamSetsPage() {
         </Card>
       )}
 
+      {!isPublished && examId && (
+        <ReadinessPanel
+          isReady={readinessData?.isReady ?? false}
+          reasons={readinessData?.reasons ?? []}
+          isLoading={readinessLoading}
+        />
+      )}
+
       {!data || !data.items || data.items.length === 0 ? (
         <EmptyState
           title="No exam sets found"
@@ -110,16 +137,14 @@ export function AdminExamSetsPage() {
         />
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle>Exam Sets</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <ExamSetsTable
               examSets={data.items}
               isLoading={isLoading}
               onDelete={handleDelete}
               isDeleting={deleteExamSetMutation.isPending}
               isPublished={isPublished}
+              onSectionCreated={handleSectionCreated}
             />
           </CardContent>
         </Card>

@@ -8,6 +8,8 @@ export interface ApiErrorResponse {
   message?: string
   error?: string
   statusCode?: number
+  code?: string
+  reasons?: string[]
 }
 
 /**

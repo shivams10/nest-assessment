@@ -7,12 +7,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   listQuestionsService,
   createQuestionService,
+  updateQuestionService,
+  deleteQuestionService,
   getSectionQuestionsService,
   assignQuestionsService,
 } from '@/api/questions.api'
+import { examSetsKeys } from './examSets.queries'
 import type {
   Question,
   CreateQuestionRequest,
+  UpdateQuestionRequest,
   AssignQuestionsRequest,
   ListQuestionsParams,
   ListQuestionsResponse,
@@ -70,6 +74,34 @@ export function useSectionQuestions(sectionId: string | undefined) {
 }
 
 /**
+ * useUpdateQuestion - Update question mutation
+ */
+export function useUpdateQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation<Question, Error, { id: string; data: UpdateQuestionRequest }>({
+    mutationFn: ({ id, data }) => updateQuestionService(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: questionsKeys.all })
+    },
+  })
+}
+
+/**
+ * useDeleteQuestion - Delete question mutation
+ */
+export function useDeleteQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, string>({
+    mutationFn: deleteQuestionService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: questionsKeys.all })
+    },
+  })
+}
+
+/**
  * useAssignQuestions - Assign questions to section mutation
  */
 export function useAssignQuestions() {
@@ -84,6 +116,8 @@ export function useAssignQuestions() {
       })
       // Invalidate questions list to update assignment status
       queryClient.invalidateQueries({ queryKey: questionsKeys.all })
+      // Invalidate exam sets to refresh assignedQuestionsCount
+      queryClient.invalidateQueries({ queryKey: examSetsKeys.all })
     },
   })
 }

@@ -28,6 +28,12 @@ JWT_ACCESS_SECRET="replace_me_access"
 JWT_ACCESS_EXPIRES_IN="15m"
 JWT_REFRESH_SECRET="replace_me_refresh"
 JWT_REFRESH_EXPIRES_IN="7d"
+FRONTEND_URL="http://localhost:5173"
+
+# Optional: Google OAuth (if using Google login)
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 ```
 
 Run database migrations and seed (from `apps/backend`):

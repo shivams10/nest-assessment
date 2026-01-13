@@ -14,16 +14,22 @@ export class QuestionsService {
   constructor(private readonly repository: QuestionsRepository) {}
 
   async listQuestions(dto: ListQuestionsDto) {
-    const page = dto.page || 1;
-    const limit = dto.limit || 10;
-    const skip = (page - 1) * limit;
+    // Parse page and limit to ensure they are numbers
+    const page = typeof dto.page === 'string' ? parseInt(dto.page, 10) : (dto.page || 1);
+    const limit = typeof dto.limit === 'string' ? parseInt(dto.limit, 10) : (dto.limit || 10);
+    
+    // Validate parsed values
+    const validPage = isNaN(page) || page < 1 ? 1 : page;
+    const validLimit = isNaN(limit) || limit < 1 ? 10 : limit;
+    
+    const skip = (validPage - 1) * validLimit;
 
     const result = await this.repository.findMany({
       category: dto.category,
       type: dto.type,
       search: dto.search,
       skip,
-      take: limit,
+      take: validLimit,
     });
 
     return {

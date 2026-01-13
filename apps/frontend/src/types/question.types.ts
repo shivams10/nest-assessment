@@ -51,10 +51,14 @@ export interface ListQuestionsResponse {
 }
 
 export interface SectionQuestionsResponse {
-  sectionId: string
   assignedQuestions: Question[]
   availableQuestions: Question[]
-  totalAssigned: number
-  totalAvailable: number
+}
+
+export interface UpdateQuestionRequest {
+  stem?: string
+  type?: QuestionType
+  category?: QuestionCategory
+  options?: Omit<QuestionOption, 'id'>[]
 }
 
