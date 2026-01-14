@@ -14,6 +14,8 @@ export interface Exam {
   collegeSessionId: string
   createdAt: string
   updatedAt: string
+  submissionId?: string | null
+  submittedAt?: string | null
 }
 
 export interface CreateExamRequest {

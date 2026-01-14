@@ -235,10 +235,21 @@ export class ScoringRepository {
           },
         }),
       },
-      ...(typeof selectedForNextRound === 'boolean' && {
-        selectedForNextRound,
-      }),
     };
+
+    // Explicitly add selectedForNextRound filter if it's a boolean (including false)
+    if (typeof selectedForNextRound === 'boolean') {
+      where.selectedForNextRound = selectedForNextRound;
+      // Log for debugging
+      console.log(
+        `[DEBUG] Repository filter - selectedForNextRound=${selectedForNextRound}, where clause:`,
+        JSON.stringify(where, null, 2),
+      );
+    } else {
+      console.log(
+        `[DEBUG] Repository filter - selectedForNextRound not applied (value: ${selectedForNextRound}, type: ${typeof selectedForNextRound})`,
+      );
+    }
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.finalResult.findMany({
@@ -400,5 +411,27 @@ export class ScoringRepository {
         }),
       ),
     );
+  }
+
+  /**
+   * Update selectedForNextRound for a final result by submissionId
+   */
+  async updateSelectedForNextRound(
+    submissionId: string,
+    selectedForNextRound: boolean,
+  ): Promise<{
+    id: string;
+    submissionId: string;
+    selectedForNextRound: boolean;
+  }> {
+    return this.prisma.finalResult.update({
+      where: { submissionId },
+      data: { selectedForNextRound },
+      select: {
+        id: true,
+        submissionId: true,
+        selectedForNextRound: true,
+      },
+    });
   }
 }

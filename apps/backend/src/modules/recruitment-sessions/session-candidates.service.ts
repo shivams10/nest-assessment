@@ -6,8 +6,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserRole, SessionStatus } from '@prisma/client';
-import { parseCandidateCsv, type ParsedCandidateRow } from '../candidates/bulk/utils/csv-parser.util';
-import { generateErrorCsv, type FailedCandidateRow } from '../candidates/bulk/utils/error-csv.util';
+import {
+  parseCandidateCsv,
+  type ParsedCandidateRow,
+} from '../candidates/bulk/utils/csv-parser.util';
+import {
+  generateErrorCsv,
+  type FailedCandidateRow,
+} from '../candidates/bulk/utils/error-csv.util';
 import { saveErrorCsv } from '../candidates/bulk/utils/file-storage.util';
 // Simple chunk array utility
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -24,6 +30,32 @@ export class SessionCandidatesService {
   private readonly BATCH_SIZE = 500;
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Calculate session status based on current date and session dates
+   * This ensures we use the actual current status, not the stored (potentially stale) status
+   */
+  private calculateSessionStatus(
+    startDate: Date | null,
+    endDate: Date | null,
+    storedStatus: SessionStatus,
+  ): SessionStatus {
+    if (!startDate || !endDate) {
+      return storedStatus; // Cannot calculate without both dates, use stored status
+    }
+
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now >= start && now <= end) {
+      return SessionStatus.active;
+    } else if (now > end) {
+      return SessionStatus.completed;
+    } else {
+      return SessionStatus.upcoming;
+    }
+  }
 
   /**
    * Bulk assign candidates to a session via CSV upload
@@ -49,8 +81,17 @@ export class SessionCandidatesService {
       throw new NotFoundException('Recruitment session not found');
     }
 
-    if (session.status === SessionStatus.completed) {
-      throw new BadRequestException('Cannot assign candidates to a completed session');
+    // Calculate actual status based on dates (not stored status which might be stale)
+    const actualStatus = this.calculateSessionStatus(
+      session.startDate,
+      session.endDate,
+      session.status,
+    );
+
+    if (actualStatus === SessionStatus.completed) {
+      throw new BadRequestException(
+        'Cannot assign candidates to a completed session',
+      );
     }
 
     let rows: ParsedCandidateRow[];
@@ -78,8 +119,10 @@ export class SessionCandidatesService {
     for (const row of rows) {
       const missingFields: string[] = [];
       if (!row.email || row.email.trim() === '') missingFields.push('email');
-      if (!row.firstName || row.firstName.trim() === '') missingFields.push('firstName');
-      if (!row.lastName || row.lastName.trim() === '') missingFields.push('lastName');
+      if (!row.firstName || row.firstName.trim() === '')
+        missingFields.push('firstName');
+      if (!row.lastName || row.lastName.trim() === '')
+        missingFields.push('lastName');
 
       if (missingFields.length > 0) {
         failed.push({
@@ -198,8 +241,17 @@ export class SessionCandidatesService {
       throw new NotFoundException('Recruitment session not found');
     }
 
-    if (session.status === SessionStatus.completed) {
-      throw new BadRequestException('Cannot assign candidates to a completed session');
+    // Calculate actual status based on dates (not stored status which might be stale)
+    const actualStatus = this.calculateSessionStatus(
+      session.startDate,
+      session.endDate,
+      session.status,
+    );
+
+    if (actualStatus === SessionStatus.completed) {
+      throw new BadRequestException(
+        'Cannot assign candidates to a completed session',
+      );
     }
 
     // Validate candidate exists and is a candidate
@@ -212,7 +264,9 @@ export class SessionCandidatesService {
     });
 
     if (!candidate) {
-      throw new NotFoundException('Candidate not found or is not a candidate user');
+      throw new NotFoundException(
+        'Candidate not found or is not a candidate user',
+      );
     }
 
     // Update candidate's session assignment
@@ -240,7 +294,11 @@ export class SessionCandidatesService {
   /**
    * Get paginated list of candidates for a session
    */
-  async getSessionCandidates(sessionId: string, page: number = 1, limit: number = 10) {
+  async getSessionCandidates(
+    sessionId: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
     // Validate session exists
     const session = await this.prisma.recruitmentSession.findFirst({
       where: {
@@ -343,4 +401,3 @@ export class SessionCandidatesService {
     };
   }
 }
-

@@ -31,6 +31,7 @@ export class ExamService {
 
   /**
    * List published exams for a candidate based on their assigned session
+   * Only returns exams that are currently within their window dates
    */
   async listExamsForCandidate(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -57,9 +58,48 @@ export class ExamService {
       user.collegeSessionId,
     );
 
+    // Get submissions for this user
+    const submissions = await this.prisma.submission.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        examId: true,
+        submittedAt: true,
+      },
+    });
+
+    // Create a map of examId -> submission
+    const submissionMap = new Map(submissions.map((s) => [s.examId, s]));
+
+    // Filter exams that are within their window dates
+    const now = new Date();
+    const availableExams = exams
+      .filter((exam) => {
+        if (!exam.windowStartsAt || !exam.windowEndsAt) {
+          return false; // Skip exams without window dates
+        }
+
+        const windowStart = new Date(exam.windowStartsAt);
+        const windowEnd = new Date(exam.windowEndsAt);
+
+        // Exam is available if current time is within the window
+        return now >= windowStart && now <= windowEnd;
+      })
+      .map((exam) => {
+        const submission = submissionMap.get(exam.id);
+        return {
+          ...exam,
+          submissionId: submission?.id || null,
+          submittedAt: submission?.submittedAt || null,
+        };
+      });
+
     return {
-      data: exams,
-      total: exams.length,
+      data: availableExams,
+      total: availableExams.length,
       page: 1,
       limit: 20,
     };
@@ -111,9 +151,7 @@ export class ExamService {
       );
 
       if (!aptitudeSection) {
-        reasons.push(
-          `Exam set "${examSet.name}" is missing aptitude section`,
-        );
+        reasons.push(`Exam set "${examSet.name}" is missing aptitude section`);
       } else {
         const aptitudeAssignedCount = aptitudeSection.questions.length;
         if (aptitudeAssignedCount < aptitudeSection.questionCount) {
@@ -124,9 +162,7 @@ export class ExamService {
       }
 
       if (!technicalSection) {
-        reasons.push(
-          `Exam set "${examSet.name}" is missing technical section`,
-        );
+        reasons.push(`Exam set "${examSet.name}" is missing technical section`);
       } else {
         const technicalAssignedCount = technicalSection.questions.length;
         if (technicalAssignedCount < technicalSection.questionCount) {

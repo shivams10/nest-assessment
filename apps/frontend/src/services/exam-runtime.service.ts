@@ -69,15 +69,15 @@ export interface ExamResult {
  * Get exam service
  * GET /exam-runtime?submissionId=xxx
  */
-export async function getExamService(
-  submissionId: string,
-): Promise<GetExamResponse> {
+export async function getExamService(submissionId: string): Promise<GetExamResponse> {
   try {
     const response = await apiClient.get<{
       submissionId: string
       examSetId: string
       examSetName: string
       startedAt: Date | null
+      expiresAt: Date | null
+      durationSeconds: number
       sections: Array<{
         id: string
         type: string
@@ -102,19 +102,20 @@ export async function getExamService(
       examSetName: data.examSetName,
       examTitle: data.examSetName,
       startedAt: data.startedAt ? new Date(data.startedAt).toISOString() : null,
-      expiresAt: undefined, // Calculate from startedAt + duration if needed
-      sections: data.sections.map((section) => ({
+      expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : undefined,
+      durationSeconds: data.durationSeconds,
+      sections: data.sections.map(section => ({
         id: section.id,
         type: section.type as 'aptitude' | 'technical',
         sectionType: section.type,
-        questions: section.questions.map((q) => ({
+        questions: section.questions.map(q => ({
           id: q.id,
           text: q.stem,
           stem: q.stem,
           type: q.type as 'single_select' | 'multi_select',
           category: q.category as 'aptitude' | 'technical',
           sectionId: section.id,
-          options: q.options.map((opt) => ({
+          options: q.options.map(opt => ({
             id: opt.id,
             text: opt.optionText,
             optionText: opt.optionText,
@@ -140,13 +141,10 @@ export async function getExamService(
  * POST /exam-runtime/answers
  */
 export async function submitAnswersService(
-  data: SubmitAnswersRequest,
+  data: SubmitAnswersRequest
 ): Promise<SubmitAnswersResponse> {
   try {
-    const response = await apiClient.post<SubmitAnswersResponse>(
-      '/exam-runtime/answers',
-      data,
-    )
+    const response = await apiClient.post<SubmitAnswersResponse>('/exam-runtime/answers', data)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>
@@ -166,11 +164,11 @@ export async function submitAnswersService(
  * POST /submissions/:id/submit
  */
 export async function submitExamService(
-  submissionId: string,
+  submissionId: string
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const response = await apiClient.post<{ success: boolean; message?: string }>(
-      `/submissions/${submissionId}/submit`,
+      `/submissions/${submissionId}/submit`
     )
     return response.data
   } catch (error) {
@@ -190,13 +188,9 @@ export async function submitExamService(
  * Get exam result service
  * GET /submissions/:id/result
  */
-export async function getExamResultService(
-  submissionId: string,
-): Promise<ExamResult> {
+export async function getExamResultService(submissionId: string): Promise<ExamResult> {
   try {
-    const response = await apiClient.get<ExamResult>(
-      `/submissions/${submissionId}/result`,
-    )
+    const response = await apiClient.get<ExamResult>(`/submissions/${submissionId}/result`)
     return response.data
   } catch (error) {
     const axiosError = error as AxiosError<ApiErrorResponse>
@@ -210,4 +204,3 @@ export async function getExamResultService(
     throw customError
   }
 }
-

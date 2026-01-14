@@ -77,6 +77,28 @@ export class ScoringService {
   }
 
   /**
+   * Update selectedForNextRound for a submission
+   */
+  async updateSelectedForNextRound(
+    submissionId: string,
+    selectedForNextRound: boolean,
+  ): Promise<{ success: boolean; selectedForNextRound: boolean }> {
+    await this.repository.updateSelectedForNextRound(
+      submissionId,
+      selectedForNextRound,
+    );
+
+    this.logger.log(
+      `Updated selectedForNextRound for submission ${submissionId}: ${selectedForNextRound}`,
+    );
+
+    return {
+      success: true,
+      selectedForNextRound,
+    };
+  }
+
+  /**
    * Calculate and update ranks for an exam
    * - Ranks by totalMarks (descending)
    * - Tie-breaker 1: technicalMarks (descending)

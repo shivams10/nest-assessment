@@ -113,7 +113,6 @@ export async function listResultsService(
 /**
  * Toggle next round selection
  * PATCH /admin/results/:submissionId/next-round
- * Note: Endpoint may need to be created in backend
  */
 export async function toggleNextRoundSelectionService(
   submissionId: string,
