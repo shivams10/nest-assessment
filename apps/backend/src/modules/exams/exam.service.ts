@@ -217,7 +217,7 @@ export class ExamService {
       throw new BadRequestException('Exam end time must be after start time');
     }
 
-    // Validate session exists if provided
+    // Validate session exists and is not completed if provided
     if (dto.collegeSessionId) {
       const session = await this.prisma.recruitmentSession.findFirst({
         where: {
@@ -228,6 +228,12 @@ export class ExamService {
 
       if (!session) {
         throw new NotFoundException('Recruitment session not found');
+      }
+
+      if (session.endDate && session.endDate < new Date()) {
+        throw new BadRequestException(
+          'Cannot create exam for a session that has ended',
+        );
       }
     }
 
@@ -240,6 +246,7 @@ export class ExamService {
       windowEndsAt,
       durationSeconds: dto.durationSeconds,
       masterPasswordHash,
+      masterPasswordPlain: dto.masterPassword,
       isPublished: false,
       creator: {
         connect: { id: createdBy },
@@ -308,7 +315,11 @@ export class ExamService {
       throw new BadRequestException('Exam is already in draft state');
     }
 
-    if (exam.windowStartsAt && exam.windowStartsAt <= new Date()) {
+    const now = new Date();
+    const hasStarted = exam.windowStartsAt && exam.windowStartsAt <= now;
+    const hasEnded = exam.windowEndsAt && exam.windowEndsAt <= now;
+    const isLive = hasStarted && !hasEnded;
+    if (isLive) {
       throw new BadRequestException('Cannot unpublish a live exam');
     }
 
@@ -353,7 +364,7 @@ export class ExamService {
       }
     }
 
-    // Validate session exists if provided
+    // Validate session exists and is not completed if provided
     if (dto.collegeSessionId) {
       const session = await this.prisma.recruitmentSession.findFirst({
         where: {
@@ -364,6 +375,12 @@ export class ExamService {
 
       if (!session) {
         throw new NotFoundException('Recruitment session not found');
+      }
+
+      if (session.endDate && session.endDate < new Date()) {
+        throw new BadRequestException(
+          'Cannot assign exam to a session that has ended',
+        );
       }
     }
 
@@ -387,6 +404,10 @@ export class ExamService {
       } else {
         updateData.session = { disconnect: true };
       }
+    }
+    if (dto.masterPassword !== undefined && dto.masterPassword !== '') {
+      updateData.masterPasswordHash = await bcrypt.hash(dto.masterPassword, 10);
+      updateData.masterPasswordPlain = dto.masterPassword;
     }
 
     const updated = await this.examRepository.update(id, updateData);

@@ -1,19 +1,52 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useStartExam } from '@/hooks/queries/useExamAttempts'
+import { useExams } from '@/hooks/queries/useExams'
+import { ROUTES } from '@/constants'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { useEffect } from 'react'
 
 export function ExamStartPage() {
   const { examId } = useParams<{ examId: string }>()
+  const navigate = useNavigate()
 
+  const { data: examsData, isLoading: examsLoading } = useExams({ page: 1, limit: 100 }, false)
   const startExamMutation = useStartExam()
+
+  const exam = examsData?.data?.find((e) => e.id === examId)
+  const alreadySubmitted = Boolean(exam?.submittedAt && exam?.submissionId)
+
+  useEffect(() => {
+    if (alreadySubmitted && exam?.submissionId) {
+      navigate(ROUTES.CANDIDATE_EXAM_RESULT.replace(':submissionId', exam.submissionId), {
+        replace: true,
+      })
+    }
+  }, [alreadySubmitted, exam?.submissionId, navigate])
 
   const handleStart = () => {
     if (examId) {
       startExamMutation.mutate({ examId })
     }
+  }
+
+  if (examId && examsLoading) {
+    return <LoadingState message="Loading..." />
+  }
+
+  if (examsData && examId && !exam) {
+    return (
+      <ErrorState
+        message="Exam not found or you are not assigned to this exam."
+        onRetry={() => navigate(ROUTES.CANDIDATE_EXAMS)}
+      />
+    )
+  }
+
+  if (alreadySubmitted) {
+    return <LoadingState message="Redirecting to your result..." />
   }
 
   if (startExamMutation.isPending) {

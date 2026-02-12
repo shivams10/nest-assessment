@@ -117,6 +117,7 @@ export function useSubmitExam(submissionId: string | undefined) {
     },
     onSuccess: () => {
       if (submissionId) {
+        queryClient.invalidateQueries({ queryKey: ['exams', 'candidate'] })
         // Prefetch candidate result for better UX
         queryClient.prefetchQuery({
           queryKey: resultsKeys.candidate(submissionId),

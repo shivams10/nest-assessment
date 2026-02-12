@@ -19,7 +19,7 @@ interface ExamsTableProps {
   exams: Exam[]
   isLoading?: boolean
   onPublish?: (examId: string, onError?: (error: Error) => void, onSuccess?: () => void) => void
-  onUnpublish?: (examId: string) => void
+  onUnpublish?: (examId: string, onError?: (error: Error) => void, onSuccess?: () => void) => void
   onEdit?: (examId: string) => void
   onDelete?: (examId: string) => void
   isPublishing?: boolean
@@ -47,7 +47,9 @@ export function ExamsTable({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
   const [localPublishError, setLocalPublishError] = useState<Error | null>(null)
+  const [localUnpublishError, setLocalUnpublishError] = useState<Error | null>(null)
   const [copiedSessionId, setCopiedSessionId] = useState<string | null>(null)
+  const [copiedPasswordExamId, setCopiedPasswordExamId] = useState<string | null>(null)
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A'
@@ -73,12 +75,9 @@ export function ExamsTable({
     try {
       await navigator.clipboard.writeText(sessionId)
       setCopiedSessionId(sessionId)
-      setTimeout(() => {
-        setCopiedSessionId(null)
-      }, 2000)
+      setTimeout(() => setCopiedSessionId(null), 2000)
     } catch (error) {
       console.error('Failed to copy session ID:', error)
-      // Fallback for older browsers
       const textArea = document.createElement('textarea')
       textArea.value = sessionId
       textArea.style.position = 'fixed'
@@ -88,9 +87,31 @@ export function ExamsTable({
       try {
         document.execCommand('copy')
         setCopiedSessionId(sessionId)
-        setTimeout(() => {
-          setCopiedSessionId(null)
-        }, 2000)
+        setTimeout(() => setCopiedSessionId(null), 2000)
+      } catch (err) {
+        console.error('Fallback copy failed:', err)
+      }
+      document.body.removeChild(textArea)
+    }
+  }
+
+  const handleCopyMasterPassword = async (examId: string, password: string) => {
+    try {
+      await navigator.clipboard.writeText(password)
+      setCopiedPasswordExamId(examId)
+      setTimeout(() => setCopiedPasswordExamId(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy password:', error)
+      const textArea = document.createElement('textarea')
+      textArea.value = password
+      textArea.style.position = 'fixed'
+      textArea.style.opacity = '0'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        setCopiedPasswordExamId(examId)
+        setTimeout(() => setCopiedPasswordExamId(null), 2000)
       } catch (err) {
         console.error('Fallback copy failed:', err)
       }
@@ -108,6 +129,7 @@ export function ExamsTable({
   }
 
   const handleUnpublishClick = (examId: string) => {
+    setLocalUnpublishError(null)
     setSelectedExamId(examId)
     setShowUnpublishDialog(true)
   }
@@ -133,9 +155,15 @@ export function ExamsTable({
 
   const handleConfirmUnpublish = () => {
     if (selectedExamId && onUnpublish) {
-      onUnpublish(selectedExamId)
-      setShowUnpublishDialog(false)
-      setSelectedExamId(null)
+      onUnpublish(
+        selectedExamId,
+        (error) => setLocalUnpublishError(error),
+        () => {
+          setShowUnpublishDialog(false)
+          setSelectedExamId(null)
+          setLocalUnpublishError(null)
+        },
+      )
     }
   }
 
@@ -174,6 +202,7 @@ export function ExamsTable({
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Session ID</TableHead>
+            <TableHead>Master Password</TableHead>
             <TableHead>Window Start</TableHead>
             <TableHead>Window End</TableHead>
             <TableHead>Duration</TableHead>
@@ -219,6 +248,41 @@ export function ExamsTable({
                     </div>
                   )}
                 </div>
+              </TableCell>
+              <TableCell>
+                {exam.masterPasswordPlain != null && exam.masterPasswordPlain !== '' ? (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMasterPassword(exam.id, exam.masterPasswordPlain!)}
+                      className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer group font-mono max-w-[140px]"
+                      title="Copy master password"
+                    >
+                      <span className="truncate block">{exam.masterPasswordPlain}</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
+                    {copiedPasswordExamId === exam.id && (
+                      <div className="absolute left-0 top-full mt-1 px-2 py-1 text-xs text-green-600 bg-green-50 dark:bg-green-950 rounded border border-green-200 dark:border-green-800 whitespace-nowrap z-10">
+                        ✓ Copied!
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-xs">—</span>
+                )}
               </TableCell>
               <TableCell>{formatDate(exam.windowStartsAt)}</TableCell>
               <TableCell>{formatDate(exam.windowEndsAt)}</TableCell>
@@ -304,11 +368,11 @@ export function ExamsTable({
               {localPublishError &&
                 (() => {
                   const error = localPublishError
-                  const errorWithReasons = error as any
-                  const hasReasons =
-                    errorWithReasons?.reasons &&
-                    Array.isArray(errorWithReasons.reasons) &&
-                    errorWithReasons.reasons.length > 0
+                  const reasons =
+                    'reasons' in error &&
+                    Array.isArray((error as Error & { reasons: string[] }).reasons)
+                      ? (error as Error & { reasons: string[] }).reasons
+                      : []
 
                   return (
                     <div className="rounded-md border border-destructive bg-destructive/10 p-4">
@@ -318,9 +382,9 @@ export function ExamsTable({
                       <p className="text-sm text-destructive mb-2">
                         {error?.message || 'Failed to publish exam'}
                       </p>
-                      {hasReasons && (
+                      {reasons.length > 0 && (
                         <ul className="list-inside list-disc space-y-1 text-sm text-destructive/90">
-                          {errorWithReasons.reasons.map((reason: string, index: number) => (
+                          {reasons.map((reason, index) => (
                             <li key={index}>{reason}</li>
                           ))}
                         </ul>
@@ -364,21 +428,34 @@ export function ExamsTable({
                 Are you sure you want to unpublish this exam? Candidates will no longer be able to
                 see or take it.
               </p>
+              {localUnpublishError && (
+                <div className="rounded-md border border-destructive bg-destructive/10 p-4">
+                  <p className="text-sm text-destructive">
+                    {localUnpublishError.message}
+                  </p>
+                </div>
+              )}
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   variant="outline"
-                  onClick={() => setShowUnpublishDialog(false)}
+                  onClick={() => {
+                    setShowUnpublishDialog(false)
+                    setSelectedExamId(null)
+                    setLocalUnpublishError(null)
+                  }}
                   disabled={isUnpublishing}
                 >
-                  Cancel
+                  {localUnpublishError ? 'Close' : 'Cancel'}
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleConfirmUnpublish}
-                  disabled={isUnpublishing}
-                >
-                  {isUnpublishing ? 'Unpublishing...' : 'Unpublish Exam'}
-                </Button>
+                {!localUnpublishError && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleConfirmUnpublish}
+                    disabled={isUnpublishing}
+                  >
+                    {isUnpublishing ? 'Unpublishing...' : 'Unpublish Exam'}
+                  </Button>
+                )}
               </div>
             </div>
           </Card>

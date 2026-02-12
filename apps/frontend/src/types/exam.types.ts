@@ -16,6 +16,8 @@ export interface Exam {
   updatedAt: string
   submissionId?: string | null
   submittedAt?: string | null
+  /** Master password plain (admin/moderator only); only present in admin API responses */
+  masterPasswordPlain?: string | null
 }
 
 export interface CreateExamRequest {
@@ -35,6 +37,7 @@ export interface UpdateExamRequest {
   windowEndsAt?: string
   durationSeconds?: number
   collegeSessionId?: string
+  masterPassword?: string
 }
 
 export interface ListExamsParams {

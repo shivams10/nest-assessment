@@ -14,6 +14,7 @@ import { ExamRuntimeModule } from './modules/exam-runtime/exam-runtime.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RecruitmentSessionModule } from './modules/recruitment-sessions/recruitment-session.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { QuestionsModule } from './modules/questions/questions.module';
     AdminModule,
     RecruitmentSessionModule,
     QuestionsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [

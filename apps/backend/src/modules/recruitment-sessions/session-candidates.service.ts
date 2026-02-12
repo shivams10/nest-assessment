@@ -162,10 +162,14 @@ export class SessionCandidatesService {
                 continue;
               }
 
-              // Update existing candidate
+              // Update existing candidate (session + names from CSV)
               await tx.user.update({
                 where: { id: existingUser.id },
-                data: { collegeSessionId: sessionId },
+                data: {
+                  collegeSessionId: sessionId,
+                  firstName: row.firstName,
+                  lastName: row.lastName,
+                },
               });
               assignedCount++;
             } else {

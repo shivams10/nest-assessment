@@ -32,4 +32,8 @@ export class UpdateExamDto {
   @IsOptional()
   @IsUUID()
   collegeSessionId?: string;
+
+  @IsOptional()
+  @IsString()
+  masterPassword?: string;
 }

@@ -25,6 +25,7 @@ import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { SubmitDialog } from '@/pages/exam/components/SubmitDialog'
+import { ROUTES } from '@/constants'
 
 /**
  * AdminCandidatesPage - Admin candidates management page
@@ -68,7 +69,7 @@ export function AdminCandidatesPage() {
   const bulkCsvMutation = useBulkAssignCandidatesToSession()
 
   const handleViewResult = (submissionId: string) => {
-    navigate(`/submissions/${submissionId}/result`)
+    navigate(ROUTES.ADMIN_SUBMISSION_RESULT.replace(':submissionId', submissionId))
   }
 
   const handleActivateClick = (candidateId: string) => {
@@ -92,6 +93,7 @@ export function AdminCandidatesPage() {
       setShowActivateDialog(false)
       setActionCandidateId(null)
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     }
   }
@@ -107,6 +109,7 @@ export function AdminCandidatesPage() {
       setShowDeactivateDialog(false)
       setActionCandidateId(null)
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     }
   }
@@ -128,6 +131,7 @@ export function AdminCandidatesPage() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     }
   }
@@ -144,6 +148,7 @@ export function AdminCandidatesPage() {
         },
       })
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     }
   }
@@ -180,6 +185,7 @@ export function AdminCandidatesPage() {
       setBulkAssignSessionId('')
       setShowBulkAssignDialog(false)
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     }
   }
@@ -656,7 +662,11 @@ export function AdminCandidatesPage() {
                       if (fileInputRef.current) {
                         fileInputRef.current.value = ''
                       }
+                      // Auto-filter list to the session you just uploaded to, so you see the new candidates
+                      setCollegeSessionIdFilter(csvSessionId)
+                      setPage(1)
                     } catch (error) {
+                      console.error(error)
                       // Error handled by mutation
                     }
                   }}

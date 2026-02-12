@@ -123,6 +123,25 @@ export class AdminService {
     return deleted;
   }
 
+  async setUserPassword(userId: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    this.logger.log(`Password set for user: userId=${userId}, email=${user.email}`);
+    return { success: true, message: 'Password updated' };
+  }
+
   async listUsers(dto: ListUsersDto) {
     const page = dto.page ?? 1;
     const limit = Math.min(dto.limit ?? 10, 50);
@@ -153,6 +172,15 @@ export class AdminService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async getSubmissionResult(submissionId: string) {
+    const result =
+      await this.scoringService.getFinalResultForSubmission(submissionId);
+    if (!result) {
+      throw new NotFoundException('Result not found for this submission');
+    }
+    return result;
   }
 
   async listResults(dto: ListResultsDto) {

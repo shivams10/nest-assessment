@@ -39,6 +39,31 @@ export async function getCandidateResultService(
 }
 
 /**
+ * Get submission result (admin/moderator)
+ * GET /admin/submissions/:submissionId/result
+ */
+export async function getAdminSubmissionResultService(
+  submissionId: string,
+): Promise<CandidateResult> {
+  try {
+    const response = await apiClient.get<CandidateResult>(
+      `/admin/submissions/${submissionId}/result`,
+    )
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Failed to fetch result'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
+/**
  * List results for admin
  * GET /admin/results
  */

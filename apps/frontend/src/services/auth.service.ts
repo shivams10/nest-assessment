@@ -32,6 +32,42 @@ export interface RefreshTokenResponse {
   accessToken: string
 }
 
+export interface LoginWithExamPasswordRequest {
+  email: string
+  masterPassword: string
+}
+
+export interface LoginWithExamPasswordResponse extends LoginResponse {
+  examId: string
+}
+
+/**
+ * Student login with exam master password
+ * POST /auth/login-with-exam-password
+ * Returns tokens + examId to open that exam board
+ */
+export async function loginWithExamPasswordService(
+  data: LoginWithExamPasswordRequest,
+): Promise<LoginWithExamPasswordResponse> {
+  try {
+    const response = await apiClient.post<LoginWithExamPasswordResponse>(
+      '/auth/login-with-exam-password',
+      data,
+    )
+    return response.data
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiErrorResponse>
+    const errorMessage =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'Invalid email or exam password'
+    const customError = new Error(errorMessage)
+    ;(customError as unknown as { status?: number }).status = axiosError.response?.status
+    throw customError
+  }
+}
+
 /**
  * Login service
  * POST /auth/login

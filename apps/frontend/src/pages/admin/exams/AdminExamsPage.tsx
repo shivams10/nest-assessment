@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   useAdminExams,
   usePublishExam,
@@ -21,8 +21,10 @@ import { ROUTES } from '@/constants'
  */
 export function AdminExamsPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionFromUrl = searchParams.get('session') ?? ''
   const [page, setPage] = useState(1)
-  const [sessionFilter, setSessionFilter] = useState<string>('')
+  const [sessionFilter, setSessionFilter] = useState<string>(sessionFromUrl)
   const [statusFilter, setStatusFilter] = useState<'draft' | 'published' | undefined>(
     undefined,
   )
@@ -61,8 +63,19 @@ export function AdminExamsPage() {
     })
   }
 
-  const handleUnpublish = (examId: string) => {
-    unpublishExamMutation.mutate(examId)
+  const handleUnpublish = (
+    examId: string,
+    onError?: (error: Error) => void,
+    onSuccess?: () => void,
+  ) => {
+    unpublishExamMutation.mutate(examId, {
+      onError: (error) => {
+        if (onError) onError(error)
+      },
+      onSuccess: () => {
+        if (onSuccess) onSuccess()
+      },
+    })
   }
 
   const handleDelete = (examId: string) => {

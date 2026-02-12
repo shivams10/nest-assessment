@@ -12,6 +12,7 @@ import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateModeratorDto } from './dto/create-moderator.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { ToggleNextRoundDto } from './dto/toggle-next-round.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -45,9 +46,22 @@ export class AdminController {
     return this.adminService.softDeleteUser(userId);
   }
 
+  @Patch('users/:id/password')
+  setUserPassword(
+    @Param('id') userId: string,
+    @Body() dto: SetPasswordDto,
+  ) {
+    return this.adminService.setUserPassword(userId, dto.password);
+  }
+
   @Get('users')
   listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
+  }
+
+  @Get('submissions/:submissionId/result')
+  getSubmissionResult(@Param('submissionId') submissionId: string) {
+    return this.adminService.getSubmissionResult(submissionId);
   }
 
   @Get('results')

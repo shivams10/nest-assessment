@@ -43,6 +43,10 @@ interface ExamFormProps {
   sessions: RecruitmentSession[]
   defaultValues?: Partial<ExamFormData>
   isEdit?: boolean
+  /** When true, all fields are disabled and submit is hidden (e.g. published exam view) */
+  readOnly?: boolean
+  /** Current master password (admin only); shown in edit mode when available */
+  currentMasterPassword?: string | null
 }
 
 /**
@@ -54,6 +58,8 @@ export function ExamForm({
   sessions,
   defaultValues,
   isEdit = false,
+  readOnly = false,
+  currentMasterPassword,
 }: ExamFormProps) {
   const {
     register,
@@ -139,24 +145,28 @@ export function ExamForm({
   const durationSeconds = watch('durationSeconds')
   const durationHours = durationSeconds ? durationSeconds / 3600 : 0
 
+  const disabled = isLoading || readOnly
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEdit ? 'Edit Exam' : 'Create Exam'}</CardTitle>
+        <CardTitle>{readOnly ? 'Exam Details' : isEdit ? 'Edit Exam' : 'Create Exam'}</CardTitle>
         <CardDescription>
-          {isEdit
-            ? 'Update exam details (only draft exams can be edited)'
-            : 'Create a new exam for a recruitment session'}
+          {readOnly
+            ? 'This exam is published and cannot be edited. Unpublish the exam to make changes.'
+            : isEdit
+              ? 'Update exam details (only draft exams can be edited)'
+              : 'Create a new exam for a recruitment session'}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="collegeSessionId">Recruitment Session {isEdit && '(Optional)'}</Label>
+            <Label htmlFor="collegeSessionId">Recruitment Session {isEdit && !readOnly && '(Optional)'}</Label>
             <select
               id="collegeSessionId"
               {...register('collegeSessionId')}
-              disabled={isLoading}
+              disabled={disabled}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">{isEdit ? 'Keep current session' : 'Select a session'}</option>
@@ -179,7 +189,7 @@ export function ExamForm({
               id="title"
               {...register('title')}
               placeholder="e.g., Technical Assessment 2024"
-              disabled={isLoading}
+              disabled={disabled}
             />
             {errors.title && (
               <p className="text-sm text-destructive">{errors.title.message}</p>
@@ -192,7 +202,7 @@ export function ExamForm({
               id="description"
               {...register('description')}
               placeholder="Exam description"
-              disabled={isLoading}
+              disabled={disabled}
             />
             {errors.description && (
               <p className="text-sm text-destructive">
@@ -215,7 +225,7 @@ export function ExamForm({
                 id="windowStartsAt"
                 type="datetime-local"
                 {...register('windowStartsAt')}
-                disabled={isLoading}
+                disabled={disabled}
                 min={
                   selectedSession?.startDate
                     ? (() => {
@@ -261,7 +271,7 @@ export function ExamForm({
                 id="windowEndsAt"
                 type="datetime-local"
                 {...register('windowEndsAt')}
-                disabled={isLoading}
+                disabled={disabled}
                 min={
                   selectedSession?.startDate
                     ? (() => {
@@ -306,7 +316,7 @@ export function ExamForm({
                 value={durationHours}
                 onChange={(e) => handleDurationChange(e.target.value)}
                 placeholder="1.5"
-                disabled={isLoading}
+                disabled={disabled}
               />
               {errors.durationSeconds && (
                 <p className="text-sm text-destructive">
@@ -315,7 +325,31 @@ export function ExamForm({
               )}
             </div>
 
-            {!isEdit && (
+            {isEdit ? (
+              <div className="space-y-2">
+                {currentMasterPassword != null && currentMasterPassword !== '' && (
+                  <div className="space-y-1">
+                    <Label>Current Master Password</Label>
+                    <p className="font-mono text-sm rounded-md border bg-muted/50 px-3 py-2 truncate" title={currentMasterPassword}>
+                      {currentMasterPassword}
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="masterPassword">New Master Password (optional)</Label>
+                  <Input
+                    id="masterPassword"
+                    type="password"
+                    {...register('masterPassword')}
+                    placeholder="Leave blank to keep current"
+                    disabled={disabled}
+                  />
+                  {errors.masterPassword && (
+                    <p className="text-sm text-destructive">{errors.masterPassword.message}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
               <div className="space-y-2">
                 <Label htmlFor="masterPassword">Master Password</Label>
                 <Input
@@ -323,7 +357,7 @@ export function ExamForm({
                   type="password"
                   {...register('masterPassword')}
                   placeholder="Enter master password"
-                  disabled={isLoading}
+                  disabled={disabled}
                 />
                 {errors.masterPassword && (
                   <p className="text-sm text-destructive">
@@ -334,17 +368,19 @@ export function ExamForm({
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading
-                ? isEdit
-                  ? 'Updating...'
-                  : 'Creating...'
-                : isEdit
-                  ? 'Update Exam'
-                  : 'Create Exam'}
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isLoading} className="flex-1">
+                {isLoading
+                  ? isEdit
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : isEdit
+                    ? 'Update Exam'
+                    : 'Create Exam'}
+              </Button>
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>

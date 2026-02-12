@@ -47,17 +47,10 @@ export function EditExamPage() {
     )
   }
 
-  // Only DRAFT exams can be edited
-  if (exam.isPublished) {
-    return (
-      <ErrorState
-        message="Published exams cannot be edited. Please unpublish the exam first."
-        onRetry={() => navigate(ROUTES.ADMIN_EXAMS)}
-      />
-    )
-  }
+  const isReadOnly = exam.isPublished
+  const sessions = sessionsData?.data ?? []
 
-  if (!sessionsData?.data || sessionsData.data.length === 0) {
+  if (!isReadOnly && sessions.length === 0) {
     return (
       <ErrorState
         message="No recruitment sessions found. Please create a session first."
@@ -70,10 +63,12 @@ export function EditExamPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          Edit Exam
+          {isReadOnly ? 'Exam Details' : 'Edit Exam'}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Update exam details (only draft exams can be edited)
+          {isReadOnly
+            ? 'View exam details. Published exams cannot be edited.'
+            : 'Update exam details (only draft exams can be edited)'}
         </p>
       </div>
 
@@ -81,8 +76,10 @@ export function EditExamPage() {
         <ExamForm
           onSubmit={handleSubmit}
           isLoading={updateExamMutation.isPending}
-          sessions={sessionsData.data}
+          sessions={sessions}
           isEdit={true}
+          readOnly={isReadOnly}
+          currentMasterPassword={exam?.masterPasswordPlain ?? undefined}
           defaultValues={{
             collegeSessionId: exam?.collegeSessionId || undefined,
             title: exam?.title,
@@ -90,7 +87,7 @@ export function EditExamPage() {
             windowStartsAt: exam?.windowStartsAt ? new Date(exam.windowStartsAt).toISOString().slice(0, 16) : undefined,
             windowEndsAt: exam?.windowEndsAt ? new Date(exam.windowEndsAt).toISOString().slice(0, 16) : undefined,
             durationSeconds: exam?.durationSeconds,
-            masterPassword: '', // Don't prefill password
+            masterPassword: '',
           }}
         />
       </div>

@@ -6,12 +6,28 @@ import {
   Req,
   Res,
   UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService, AuthTokens } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LoginWithExamPasswordDto } from './dto/login-with-exam-password.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { ConfigService } from '@config/config.service';
+
+function getRefreshTokenFromCookie(
+  cookieHeader: string | undefined,
+): string | null {
+  if (!cookieHeader) return null;
+  const parts = cookieHeader.split(';');
+  for (const part of parts) {
+    const [name, ...valueParts] = part.split('=');
+    if (name?.trim() === 'refreshToken') {
+      return valueParts.join('=').trim() || null;
+    }
+  }
+  return null;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -21,8 +37,42 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<AuthTokens> {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthTokens> {
+    const tokens = await this.authService.login(loginDto);
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    return tokens;
+  }
+
+  @Post('login-with-exam-password')
+  async loginWithExamPassword(
+    @Body() dto: LoginWithExamPasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthTokens & { examId: string }> {
+    const result = await this.authService.loginWithExamPassword(dto);
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    return result;
+  }
+
+  @Post('refresh')
+  async refresh(@Req() req: Request): Promise<{ accessToken: string }> {
+    const refreshToken = getRefreshTokenFromCookie(req.headers.cookie);
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token required');
+    }
+    return this.authService.refreshTokens(refreshToken);
   }
 
   @Get('google')

@@ -2,10 +2,11 @@ import type { RouteObject } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminGuard } from './AdminGuard'
 import { CandidateGuard } from './CandidateGuard'
+import { HomeLayoutWrapper } from '@/components/HomeLayoutWrapper'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { CandidateLayout } from '@/components/candidate/CandidateLayout'
 import { ErrorPage } from '@/pages/ErrorPage'
-import { ROUTES, TEXT } from '@/constants'
+import { ROUTES } from '@/constants'
 
 /**
  * Protected routes - require authentication
@@ -25,11 +26,17 @@ export const protectedRoutes: RouteObject[] = [
     children: [
       {
         path: ROUTES.HOME,
-        lazy: async () => {
-          // Placeholder for home page
-          const HomePage = () => <div>{TEXT.PLACEHOLDERS.HOME_PAGE}</div>
-          return { Component: HomePage }
-        },
+        element: <HomeLayoutWrapper />,
+        errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { HomePage } = await import('@/pages/HomePage')
+              return { Component: HomePage }
+            },
+          },
+        ],
       },
       {
         // Admin routes - require admin/moderator role
@@ -135,11 +142,19 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
               {
-                path: `${ROUTES.ADMIN}/candidates`,
+                path: ROUTES.ADMIN_CANDIDATES,
                 errorElement: <ErrorPage />,
                 lazy: async () => {
                   const { AdminCandidatesPage } = await import('@/pages/admin/AdminCandidatesPage')
                   return { Component: AdminCandidatesPage }
+                },
+              },
+              {
+                path: ROUTES.ADMIN_SUBMISSION_RESULT,
+                errorElement: <ErrorPage />,
+                lazy: async () => {
+                  const { AdminSubmissionResultPage } = await import('@/pages/admin/AdminSubmissionResultPage')
+                  return { Component: AdminSubmissionResultPage }
                 },
               },
               {
