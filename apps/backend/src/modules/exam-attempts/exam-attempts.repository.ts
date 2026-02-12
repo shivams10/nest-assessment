@@ -67,4 +67,24 @@ export class ExamAttemptsRepository {
       select: { id: true },
     });
   }
+
+  findExamForValidation(examId: string): Promise<{
+    id: string;
+    isPublished: boolean;
+    windowStartsAt: Date | null;
+    windowEndsAt: Date | null;
+  } | null> {
+    return this.prisma.exam.findFirst({
+      where: {
+        id: examId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        isPublished: true,
+        windowStartsAt: true,
+        windowEndsAt: true,
+      },
+    });
+  }
 }

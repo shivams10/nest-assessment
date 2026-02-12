@@ -13,6 +13,9 @@ export class ExamRuntimeRepository {
     examSetId: string;
     startedAt: Date | null;
     submittedAt: Date | null;
+    exam: {
+      durationSeconds: number;
+    };
   } | null> {
     return this.prisma.submission.findFirst({
       where: {
@@ -25,6 +28,11 @@ export class ExamRuntimeRepository {
         examSetId: true,
         startedAt: true,
         submittedAt: true,
+        exam: {
+          select: {
+            durationSeconds: true,
+          },
+        },
       },
     });
   }

@@ -39,11 +39,13 @@ export function useSubmitAnswers(submissionId: string | undefined) {
  */
 export function useSubmitExam(submissionId: string | undefined) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: () => submitExamService(submissionId!),
     onSuccess: () => {
       if (submissionId) {
+        queryClient.invalidateQueries({ queryKey: ['exams', 'candidate'] })
         navigate(
           ROUTES.CANDIDATE_EXAM_SUCCESS.replace(':submissionId', submissionId),
         )

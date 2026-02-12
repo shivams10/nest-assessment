@@ -18,6 +18,8 @@ export class ExamRuntimeService {
     examSetId: string;
     examSetName: string;
     startedAt: Date | null;
+    expiresAt: Date | null;
+    durationSeconds: number;
     sections: Array<{
       id: string;
       type: string;
@@ -44,12 +46,22 @@ export class ExamRuntimeService {
       throw new NotFoundException('Exam set not found');
     }
 
-    // 3. Shape response for frontend
+    // 3. Calculate expiresAt from startedAt + duration
+    let expiresAt: Date | null = null;
+    if (submission.startedAt && submission.exam.durationSeconds) {
+      expiresAt = new Date(
+        submission.startedAt.getTime() + submission.exam.durationSeconds * 1000,
+      );
+    }
+
+    // 4. Shape response for frontend
     return {
       submissionId: submission.id,
       examSetId: examSet.id,
       examSetName: examSet.name,
       startedAt: submission.startedAt,
+      expiresAt,
+      durationSeconds: submission.exam.durationSeconds,
       sections: examSet.sections.map((section) => ({
         id: section.id,
         type: section.sectionType,

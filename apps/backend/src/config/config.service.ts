@@ -20,7 +20,7 @@ export class ConfigService {
   }
 
   get jwtAccessExpiresIn(): StringValue {
-    return this.env.JWT_ACCESS_EXPIRES_IN;
+    return this.env.JWT_ACCESS_EXPIRES_IN as StringValue;
   }
 
   get jwtRefreshSecret(): string {
@@ -28,7 +28,7 @@ export class ConfigService {
   }
 
   get jwtRefreshExpiresIn(): StringValue {
-    return this.env.JWT_REFRESH_EXPIRES_IN;
+    return this.env.JWT_REFRESH_EXPIRES_IN as StringValue;
   }
 
   get googleClientId(): string | undefined {
@@ -45,5 +45,22 @@ export class ConfigService {
 
   get frontendUrl(): string | undefined {
     return this.env.FRONTEND_URL;
+  }
+
+  get openaiApiKey(): string | undefined {
+    return this.env.OPENAI_API_KEY;
+  }
+
+  get openaiModel(): string {
+    return this.env.OPENAI_MODEL || 'gpt-4o-mini';
+  }
+
+  get openaiMaxTokens(): number {
+    const maxTokens = this.env.OPENAI_MAX_TOKENS;
+    if (maxTokens) {
+      const parsed = parseInt(maxTokens, 10);
+      return isNaN(parsed) ? 4000 : parsed;
+    }
+    return 4000;
   }
 }

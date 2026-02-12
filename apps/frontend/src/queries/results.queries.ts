@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getCandidateResultService,
+  getAdminSubmissionResultService,
   listResultsService,
   toggleNextRoundSelectionService,
   recalculateRanksService,
@@ -23,6 +24,8 @@ export const resultsKeys = {
   all: ['results'] as const,
   candidate: (submissionId: string) =>
     [...resultsKeys.all, 'candidate', submissionId] as const,
+  adminSubmission: (submissionId: string) =>
+    [...resultsKeys.all, 'adminSubmission', submissionId] as const,
   admin: (params?: ListResultsParams) =>
     [...resultsKeys.all, 'admin', params] as const,
 }
@@ -41,6 +44,22 @@ export function useCandidateResult(submissionId: string | undefined) {
     enabled: !!submissionId,
     staleTime: 2 * 60 * 1000, // 2 minutes - results are relatively stable
     gcTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * useAdminSubmissionResult - Fetch a single submission result (admin/moderator)
+ */
+export function useAdminSubmissionResult(submissionId: string | undefined) {
+  return useQuery<CandidateResult, Error>({
+    queryKey: resultsKeys.adminSubmission(submissionId || ''),
+    queryFn: () => {
+      if (!submissionId) throw new Error('Submission ID is required')
+      return getAdminSubmissionResultService(submissionId)
+    },
+    enabled: !!submissionId,
+    staleTime: 30 * 1000,
+    gcTime: 2 * 60 * 1000,
   })
 }
 
@@ -72,9 +91,9 @@ export function useToggleNextRound() {
       selected: boolean
     }) => toggleNextRoundSelectionService(submissionId, selected),
     onSuccess: (_, variables) => {
-      // Invalidate admin results list to refetch
+      // Invalidate all admin results list variants (any params) so current page refetches
       queryClient.invalidateQueries({
-        queryKey: resultsKeys.admin(),
+        queryKey: [...resultsKeys.all, 'admin'],
       })
       // Also invalidate specific candidate result if viewing it
       queryClient.invalidateQueries({
@@ -95,7 +114,7 @@ export function useRecalculateRanks() {
     onSuccess: () => {
       // Invalidate all admin results to refetch with new ranks
       queryClient.invalidateQueries({
-        queryKey: resultsKeys.admin(),
+        queryKey: [...resultsKeys.all, 'admin'],
       })
     },
   })

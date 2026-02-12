@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { CandidateSidebar } from './CandidateSidebar'
@@ -9,9 +10,11 @@ import { CandidateTopbar } from './CandidateTopbar'
  * - Sidebar (left, hidden on mobile), Topbar (top), Content (main)
  * - Uses min-height instead of fixed heights
  * - Clean, production-ready structure
+ * - When children is provided (e.g. from HomeLayoutWrapper), renders that instead of Outlet
  */
-export function CandidateLayout() {
+export function CandidateLayout({ children }: { children?: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const content = children ?? <Outlet />
 
   return (
     <div className="flex min-h-screen w-full overflow-x-hidden">
@@ -20,7 +23,7 @@ export function CandidateLayout() {
         <CandidateTopbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6">
           <div className="container mx-auto max-w-7xl">
-            <Outlet />
+            {content}
           </div>
         </main>
       </div>

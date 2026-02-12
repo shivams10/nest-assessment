@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/queries/sessions.queries'
 import { useAdminExams } from '@/queries/exams.queries'
 import { useSessionCandidates, useBulkAssignCandidatesToSession, useAssignCandidateToSession } from '@/queries/sessionCandidates.queries'
@@ -34,6 +34,7 @@ export function AdminSessionDetailPage() {
   const navigate = useNavigate()
   const [publishingExamId, setPublishingExamId] = useState<string | null>(null)
   const [unpublishingExamId, setUnpublishingExamId] = useState<string | null>(null)
+  const [unpublishError, setUnpublishError] = useState<string | null>(null)
 
   const { data: session, isLoading: sessionLoading, isError: sessionError, error: sessionErr } = useSession(sessionId)
 
@@ -67,6 +68,7 @@ export function AdminSessionDetailPage() {
       await publishExamMutation.mutateAsync(examId)
       // Query will be invalidated by mutation's onSettled
     } catch (error) {
+      console.error(error)
       // Error handled by mutation
     } finally {
       setPublishingExamId(null)
@@ -74,12 +76,12 @@ export function AdminSessionDetailPage() {
   }
 
   const handleUnpublishExam = async (examId: string) => {
+    setUnpublishError(null)
     setUnpublishingExamId(examId)
     try {
       await unpublishExamMutation.mutateAsync(examId)
-      // Query will be invalidated by mutation's onSettled
     } catch (error) {
-      // Error handled by mutation
+      setUnpublishError(error instanceof Error ? error.message : 'Failed to unpublish exam')
     } finally {
       setUnpublishingExamId(null)
     }
@@ -190,14 +192,40 @@ export function AdminSessionDetailPage() {
       {/* B. EXAMS IN THIS SESSION */}
       <Card>
         <CardHeader>
-          <CardTitle>Exams in This Session</CardTitle>
-          <CardDescription>
-            {exams.length === 0
-              ? 'No exams assigned to this session yet'
-              : `${exams.length} exam${exams.length !== 1 ? 's' : ''} found`}
-          </CardDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Exams in This Session</CardTitle>
+              <CardDescription>
+                {exams.length === 0
+                  ? 'No exams assigned to this session yet'
+                  : `${exams.length} exam${exams.length !== 1 ? 's' : ''} found`}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to={`${ROUTES.ADMIN_EXAMS}?session=${sessionId}`}>
+                Go to Exams
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
+          {unpublishError && (
+            <div className="mb-4 rounded-md border border-destructive bg-destructive/10 p-4 flex items-center justify-between gap-2">
+              <p className="text-sm text-destructive">{unpublishError}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUnpublishError(null)}
+                className="shrink-0"
+              >
+                Dismiss
+              </Button>
+            </div>
+          )}
           {examsLoading ? (
             <LoadingState message="Loading exams..." />
           ) : exams.length === 0 ? (
@@ -212,6 +240,7 @@ export function AdminSessionDetailPage() {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead>Duration</TableHead>
+                    <TableHead>Master Password</TableHead>
                     <TableHead>Window Start</TableHead>
                     <TableHead>Window End</TableHead>
                     <TableHead>Status</TableHead>
@@ -221,8 +250,20 @@ export function AdminSessionDetailPage() {
                 <TableBody>
                   {exams.map((exam: Exam) => (
                     <TableRow key={exam.id}>
-                      <TableCell className="font-medium">{exam.title}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link
+                          to={ROUTES.ADMIN_EXAMS_EDIT.replace(':id', exam.id)}
+                          className="text-primary hover:underline"
+                        >
+                          {exam.title}
+                        </Link>
+                      </TableCell>
                       <TableCell>{formatDuration(exam.durationSeconds)}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {exam.masterPasswordPlain != null && exam.masterPasswordPlain !== ''
+                          ? exam.masterPasswordPlain
+                          : '—'}
+                      </TableCell>
                       <TableCell>{formatDate(exam.windowStartsAt)}</TableCell>
                       <TableCell>{formatDate(exam.windowEndsAt)}</TableCell>
                       <TableCell>
@@ -416,6 +457,7 @@ export function AdminSessionDetailPage() {
                         fileInputRef.current.value = ''
                       }
                     } catch (error) {
+                      console.error(error)
                       // Error handled by mutation
                     }
                   }}
@@ -491,6 +533,7 @@ export function AdminSessionDetailPage() {
                       setShowAddExistingDialog(false)
                       setSelectedCandidateId('')
                     } catch (error) {
+                      console.error(error)
                       // Error handled by mutation
                     }
                   }}

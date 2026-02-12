@@ -41,11 +41,11 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
     path: ROUTES.ADMIN_RESULTS,
     allowedRoles: ADMIN_ROLES,
   },
-  {
-    label: TEXT.ADMIN.NAVIGATION.ANALYTICS,
-    path: ROUTES.ADMIN_ANALYTICS,
-    allowedRoles: ADMIN_ROLES,
-  },
+  // {
+  //   label: TEXT.ADMIN.NAVIGATION.ANALYTICS,
+  //   path: ROUTES.ADMIN_ANALYTICS,
+  //   allowedRoles: ADMIN_ROLES,
+  // },
   {
     label: TEXT.ADMIN.NAVIGATION.SESSIONS,
     path: ROUTES.ADMIN_SESSIONS,
@@ -56,15 +56,15 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
     path: ROUTES.ADMIN_QUESTIONS,
     allowedRoles: ADMIN_ROLES,
   },
-  {
-    label: TEXT.ADMIN.NAVIGATION.BULK_UPLOAD,
-    path: ROUTES.ADMIN_BULK_UPLOAD,
-    allowedRoles: ADMIN_ROLES,
-  },
-  {
-    label: TEXT.ADMIN.NAVIGATION.USERS,
-    path: ROUTES.ADMIN_USERS,
-    allowedRoles: [ROLES.ADMIN], // Admin only
-  },
+  // {
+  //   label: TEXT.ADMIN.NAVIGATION.BULK_UPLOAD,
+  //   path: ROUTES.ADMIN_BULK_UPLOAD,
+  //   allowedRoles: ADMIN_ROLES,
+  // },
+  // {
+  //   label: TEXT.ADMIN.NAVIGATION.USERS,
+  //   path: ROUTES.ADMIN_USERS,
+  //   allowedRoles: [ROLES.ADMIN], // Admin only
+  // },
 ]
 

@@ -131,7 +131,12 @@ export default function LoginPage() {
                 <h2 className="text-2xl font-bold text-foreground">{LOGIN.SYSTEM_LOGIN_TITLE}</h2>
               </div>
               <Form {...form}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  className="space-y-4"
+                  noValidate
+                  autoComplete="off"
+                >
                   {/* Root error message - shows API errors */}
                   {rootError && (
                     <div
@@ -154,7 +159,9 @@ export default function LoginPage() {
                             id="email"
                             type="email"
                             placeholder={LOGIN.EMAIL_PLACEHOLDER}
-                            autoComplete="email"
+                            autoComplete="off"
+                            readOnly
+                            onFocus={(e) => e.target.removeAttribute('readonly')}
                             aria-label={LOGIN.EMAIL_LABEL}
                             aria-describedby={emailError ? 'email-error' : 'email-description'}
                             aria-invalid={!!emailError}
@@ -178,7 +185,9 @@ export default function LoginPage() {
                             id="password"
                             type="password"
                             placeholder={LOGIN.PASSWORD_PLACEHOLDER}
-                            autoComplete="current-password"
+                            autoComplete="off"
+                            readOnly
+                            onFocus={(e) => e.target.removeAttribute('readonly')}
                             aria-label={LOGIN.PASSWORD_LABEL}
                             aria-describedby={
                               passwordError ? 'password-error' : 'password-description'

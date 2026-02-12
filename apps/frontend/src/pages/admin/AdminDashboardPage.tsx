@@ -12,24 +12,24 @@ export function AdminDashboardPage() {
   const navigate = useNavigate()
 
   const quickActions = [
-    {
-      title: 'Analytics',
-      description: 'View exam performance and candidate statistics',
-      path: ROUTES.ADMIN_ANALYTICS,
-      color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    },
+    // {
+    //   title: 'Analytics',
+    //   description: 'View exam performance and candidate statistics',
+    //   path: ROUTES.ADMIN_ANALYTICS,
+    //   color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    // },
     {
       title: 'Results',
       description: 'Manage exam results and rankings',
       path: ROUTES.ADMIN_RESULTS,
       color: 'bg-green-500/10 text-green-600 dark:text-green-400',
     },
-    {
-      title: 'Users',
-      description: 'Manage admin and moderator accounts',
-      path: ROUTES.ADMIN_USERS,
-      color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-    },
+    // {
+    //   title: 'Users',
+    //   description: 'Manage admin and moderator accounts',
+    //   path: ROUTES.ADMIN_USERS,
+    //   color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+    // },
     {
       title: 'Exams',
       description: 'Create and manage exams',
@@ -105,24 +105,24 @@ export function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => navigate(ROUTES.ADMIN_ANALYTICS)}
             >
               View Analytics
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               onClick={() => navigate(ROUTES.ADMIN_RESULTS)}
             >
               Manage Results
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => navigate(ROUTES.ADMIN_USERS)}
             >
               Manage Users
-            </Button>
+            </Button> */}
           </div>
         </CardContent>
       </Card>

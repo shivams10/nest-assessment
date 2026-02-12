@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsString,
@@ -13,6 +14,7 @@ export class QuestionOptionDto {
   @IsNotEmpty()
   optionText!: string;
 
+  @IsBoolean()
   isCorrect!: boolean;
 }
 
@@ -32,4 +34,3 @@ export class CreateQuestionDto {
   @Type(() => QuestionOptionDto)
   options!: QuestionOptionDto[];
 }
-

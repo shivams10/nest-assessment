@@ -20,6 +20,60 @@ export class RecruitmentSessionService {
     private readonly prisma: PrismaService,
   ) {}
 
+  /**
+   * Calculate session status based on current date and session dates
+   */
+  private calculateStatus(
+    startDate: Date | null,
+    endDate: Date | null,
+  ): SessionStatus | null {
+    if (!startDate || !endDate) {
+      return null; // Cannot calculate without both dates
+    }
+
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now >= start && now <= end) {
+      return SessionStatus.active;
+    } else if (now > end) {
+      return SessionStatus.completed;
+    } else {
+      return SessionStatus.upcoming;
+    }
+  }
+
+  /**
+   * Ensure session status is up-to-date based on dates
+   */
+  private async ensureStatusIsCurrent(session: {
+    id: string;
+    startDate: Date | null;
+    endDate: Date | null;
+    status: SessionStatus;
+  }): Promise<void> {
+    const calculatedStatus = this.calculateStatus(
+      session.startDate,
+      session.endDate,
+    );
+
+    if (
+      calculatedStatus &&
+      calculatedStatus !== session.status &&
+      session.startDate &&
+      session.endDate
+    ) {
+      // Status is outdated, update it
+      await this.repository.update(session.id, {
+        status: calculatedStatus,
+      });
+      this.logger.log(
+        `Auto-updated session status: id=${session.id}, old=${session.status}, new=${calculatedStatus}`,
+      );
+    }
+  }
+
   async create(dto: CreateSessionDto, createdBy: string) {
     // Validate dates
     const startDate = new Date(dto.startDate);
@@ -30,14 +84,8 @@ export class RecruitmentSessionService {
     }
 
     // Determine status based on dates
-    const now = new Date();
-    let status: SessionStatus = SessionStatus.upcoming;
-
-    if (now >= startDate && now <= endDate) {
-      status = SessionStatus.active;
-    } else if (now > endDate) {
-      status = SessionStatus.completed;
-    }
+    const status =
+      this.calculateStatus(startDate, endDate) || SessionStatus.upcoming;
 
     // Validate college exists if provided
     if (dto.collegeId) {
@@ -83,15 +131,48 @@ export class RecruitmentSessionService {
     const limit = isNaN(limitNum) || limitNum < 1 ? 20 : limitNum;
     const skip = (page - 1) * limit;
 
-    return this.repository.findMany({
+    const result = await this.repository.findMany({
       status: dto.status,
       collegeId: dto.collegeId,
       skip,
       take: limit,
     });
+
+    // Ensure all sessions have up-to-date status
+    await Promise.all(
+      result.items.map((session) => this.ensureStatusIsCurrent(session)),
+    );
+
+    // Re-fetch if any statuses were updated (to return correct status)
+    const needsRefetch = result.items.some((session) => {
+      const calculatedStatus = this.calculateStatus(
+        session.startDate,
+        session.endDate,
+      );
+      return (
+        calculatedStatus &&
+        calculatedStatus !== session.status &&
+        session.startDate &&
+        session.endDate
+      );
+    });
+
+    if (needsRefetch) {
+      return this.repository.findMany({
+        status: dto.status,
+        collegeId: dto.collegeId,
+        skip,
+        take: limit,
+      });
+    }
+
+    return result;
   }
 
   async findById(id: string) {
+    const session = await this.repository.findById(id);
+    await this.ensureStatusIsCurrent(session);
+    // Re-fetch to get updated status if it was changed
     return this.repository.findById(id);
   }
 
@@ -133,14 +214,7 @@ export class RecruitmentSessionService {
           : null;
 
       if (startDate && endDate) {
-        const now = new Date();
-        if (now >= startDate && now <= endDate) {
-          status = SessionStatus.active;
-        } else if (now > endDate) {
-          status = SessionStatus.completed;
-        } else {
-          status = SessionStatus.upcoming;
-        }
+        status = this.calculateStatus(startDate, endDate) || status;
       }
     }
 

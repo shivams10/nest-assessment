@@ -23,6 +23,7 @@ export const ROUTES = {
   CANDIDATE_EXAM_RESULT: '/candidate/exams/:submissionId/result',
   
   // Admin routes
+  ADMIN_CANDIDATES: '/admin/candidates',
   ADMIN_USERS: '/admin/users',
   ADMIN_RESULTS: '/admin/results',
   ADMIN_ANALYTICS: '/admin/analytics',
@@ -35,6 +36,7 @@ export const ROUTES = {
   ADMIN_EXAMS_EDIT: '/admin/exams/:id/edit',
   ADMIN_EXAM_SETS: '/admin/exams/:examId/sets',
   ADMIN_EXAM_SET_QUESTIONS: '/admin/exams/:examId/sets/:setId/questions',
+  ADMIN_SUBMISSION_RESULT: '/admin/submissions/:submissionId/result',
   ADMIN_QUESTIONS: '/admin/questions',
   ADMIN_BULK_UPLOAD: '/admin/bulk-upload',
   

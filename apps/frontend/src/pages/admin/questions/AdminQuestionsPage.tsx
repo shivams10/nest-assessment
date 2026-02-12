@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/shared/ErrorState'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { QuestionsTable } from './components/QuestionsTable'
 import { QuestionFormDialog } from './components/QuestionFormDialog'
+import { AiQuestionGenerator } from './components/AiQuestionGenerator'
 import { SubmitDialog } from '@/pages/exam/components/SubmitDialog'
 import type { Question, CreateQuestionRequest, UpdateQuestionRequest } from '@/types/question.types'
 
@@ -24,6 +25,7 @@ export function AdminQuestionsPage() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null)
+  const [showAiGenerator, setShowAiGenerator] = useState(false)
 
   const { data, isLoading, isError, error, refetch } = useQuestions({
     page,
@@ -99,10 +101,24 @@ export function AdminQuestionsPage() {
             Manage questions for exams
           </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          Create Question
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowAiGenerator(!showAiGenerator)}
+          >
+            {showAiGenerator ? 'Hide' : 'AI Generator'}
+          </Button>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            Create Question
+          </Button>
+        </div>
       </div>
+
+      {showAiGenerator && (
+        <div>
+          <AiQuestionGenerator />
+        </div>
+      )}
 
       <Card>
         <CardHeader>

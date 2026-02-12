@@ -21,7 +21,7 @@ export const TEXT = {
   // Login page
   LOGIN: {
     TITLE: 'Login',
-    SYSTEM_LOGIN_TITLE: 'System Login',
+    SYSTEM_LOGIN_TITLE: 'Admin Login',
     GOOGLE_SIGN_IN: 'Sign in with Google',
     DIVIDER: 'OR',
     EMAIL_LABEL: 'Email Address',

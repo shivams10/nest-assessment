@@ -123,6 +123,25 @@ export class AdminService {
     return deleted;
   }
 
+  async setUserPassword(userId: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    this.logger.log(`Password set for user: userId=${userId}, email=${user.email}`);
+    return { success: true, message: 'Password updated' };
+  }
+
   async listUsers(dto: ListUsersDto) {
     const page = dto.page ?? 1;
     const limit = Math.min(dto.limit ?? 10, 50);
@@ -155,15 +174,62 @@ export class AdminService {
     };
   }
 
+  async getSubmissionResult(submissionId: string) {
+    const result =
+      await this.scoringService.getFinalResultForSubmission(submissionId);
+    if (!result) {
+      throw new NotFoundException('Result not found for this submission');
+    }
+    return result;
+  }
+
   async listResults(dto: ListResultsDto) {
     const page = dto.page ?? 1;
     const limit = Math.min(dto.limit ?? 10, 50);
     const skip = (page - 1) * limit;
 
+    // Normalize selectedForNextRound - handle string "true"/"false" from query params
+    // Query params come as strings, so we need to convert them explicitly
+    let selectedForNextRound: boolean | undefined = undefined;
+
+    // Use 'any' to handle cases where Transform might not have converted string to boolean
+    const rawValue: any = dto.selectedForNextRound;
+    this.logger.log(
+      `[DEBUG] ListResults - rawValue: ${JSON.stringify(rawValue)}, type: ${typeof rawValue}, dto.selectedForNextRound: ${JSON.stringify(dto.selectedForNextRound)}`,
+    );
+
+    if (rawValue !== undefined && rawValue !== null) {
+      if (typeof rawValue === 'boolean') {
+        // Already a boolean (true or false)
+        selectedForNextRound = rawValue;
+        this.logger.log(`[DEBUG] Set from boolean: ${selectedForNextRound}`);
+      } else if (typeof rawValue === 'string') {
+        // String from query param - convert explicitly
+        const lowercased = rawValue.toLowerCase().trim();
+        this.logger.log(
+          `[DEBUG] Processing string: "${rawValue}" -> "${lowercased}"`,
+        );
+        if (lowercased === 'true' || lowercased === '1') {
+          selectedForNextRound = true;
+        } else if (lowercased === 'false' || lowercased === '0') {
+          selectedForNextRound = false;
+          this.logger.log(`[DEBUG] Converted string "false" to boolean false`);
+        }
+        // If it's neither 'true' nor 'false', leave as undefined
+      } else if (typeof rawValue === 'number') {
+        // Number (0 or 1)
+        selectedForNextRound = rawValue === 1;
+      }
+    }
+
+    this.logger.log(
+      `[DEBUG] Final normalized value: selectedForNextRound=${selectedForNextRound} (type: ${typeof selectedForNextRound})`,
+    );
+
     const { items, total } = await this.scoringService.listResults({
       examId: dto.examId,
       collegeSessionId: dto.collegeSessionId,
-      selectedForNextRound: dto.selectedForNextRound,
+      selectedForNextRound,
       skip,
       take: limit,
     });
@@ -216,5 +282,35 @@ export class AdminService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async toggleNextRoundSelection(
+    submissionId: string,
+    selectedForNextRound: boolean,
+  ): Promise<{ success: boolean; selectedForNextRound: boolean }> {
+    // Verify submission exists
+    const submission = await this.prisma.submission.findUnique({
+      where: { id: submissionId },
+      select: { id: true },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // Verify final result exists
+    const finalResult = await this.prisma.finalResult.findUnique({
+      where: { submissionId },
+      select: { id: true },
+    });
+
+    if (!finalResult) {
+      throw new NotFoundException('Final result not found for this submission');
+    }
+
+    return this.scoringService.updateSelectedForNextRound(
+      submissionId,
+      selectedForNextRound,
+    );
   }
 }

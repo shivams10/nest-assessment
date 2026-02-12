@@ -34,6 +34,12 @@ enum QuestionType {
   multi_select
 }
 
+enum QuestionDifficulty {
+  easy
+  medium
+  hard
+}
+
 enum SectionType {
   aptitude
   technical
@@ -112,14 +118,15 @@ model RecruitmentSession {
 }
 
 model Exam {
-  id                 String    @id @default(uuid())
-  title              String
-  description        String?
-  windowStartsAt     DateTime?
-  windowEndsAt       DateTime?
-  durationSeconds    Int
-  isPublished        Boolean   @default(false)
-  masterPasswordHash String
+  id                   String    @id @default(uuid())
+  title                String
+  description          String?
+  windowStartsAt       DateTime?
+  windowEndsAt         DateTime?
+  durationSeconds      Int
+  isPublished          Boolean   @default(false)
+  masterPasswordHash    String
+  masterPasswordPlain   String?   // Only for admin/moderator display; never exposed to candidates
 
   collegeSessionId String?
   createdBy        String
@@ -143,6 +150,7 @@ model Question {
   stem     String
   type     QuestionType
   points   Int              @default(1)
+  difficulty QuestionDifficulty @default(medium)
 
   createdBy String
   createdAt DateTime  @default(now())
