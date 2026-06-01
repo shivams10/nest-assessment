@@ -117,34 +117,23 @@ export class AuthService {
       );
     }
 
-    let exam: { id: string } | null = await this.prisma.exam.findFirst({
+    let exam: { id: string } | null = null;
+    const examsWithHash = await this.prisma.exam.findMany({
       where: {
         collegeSessionId: user.collegeSessionId,
         isPublished: true,
         deletedAt: null,
-        masterPasswordPlain: dto.masterPassword,
       },
-      select: { id: true },
+      select: { id: true, masterPasswordHash: true },
     });
-
-    if (!exam) {
-      const examsWithHash = await this.prisma.exam.findMany({
-        where: {
-          collegeSessionId: user.collegeSessionId,
-          isPublished: true,
-          deletedAt: null,
-        },
-        select: { id: true, masterPasswordHash: true },
-      });
-      for (const e of examsWithHash) {
-        const match = await bcrypt.compare(
-          dto.masterPassword,
-          e.masterPasswordHash,
-        );
-        if (match) {
-          exam = { id: e.id };
-          break;
-        }
+    for (const e of examsWithHash) {
+      const match = await bcrypt.compare(
+        dto.masterPassword,
+        e.masterPasswordHash,
+      );
+      if (match) {
+        exam = { id: e.id };
+        break;
       }
     }
 

@@ -246,7 +246,6 @@ export class ExamService {
       windowEndsAt,
       durationSeconds: dto.durationSeconds,
       masterPasswordHash,
-      masterPasswordPlain: dto.masterPassword,
       isPublished: false,
       creator: {
         connect: { id: createdBy },
@@ -407,7 +406,6 @@ export class ExamService {
     }
     if (dto.masterPassword !== undefined && dto.masterPassword !== '') {
       updateData.masterPasswordHash = await bcrypt.hash(dto.masterPassword, 10);
-      updateData.masterPasswordPlain = dto.masterPassword;
     }
 
     const updated = await this.examRepository.update(id, updateData);

@@ -16,7 +16,7 @@ const EXAM_PUBLIC_SELECT = {
 const EXAM_ADMIN_SELECT = {
   ...EXAM_PUBLIC_SELECT,
   collegeSessionId: true,
-  masterPasswordPlain: true,
+  masterPasswordHash: true,
 } as const;
 
 @Injectable()
