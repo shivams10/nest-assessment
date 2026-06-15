@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ──────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-base:    #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle:  #f1f5f9;
+  --bg-muted:   #e2e8f0;
+
+  /* Text */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+
+  /* Brand (Indigo) */
+  --brand:        #4f46e5;
+  --brand-hover:  #4338ca;
+  --brand-active: #3730a3;
+  --brand-light:  #eef2ff;
+  --brand-border: #c7d2fe;
+  --brand-text:   #4338ca;
+
+  /* Borders */
+  --border:        #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Sidebar */
+  --sidebar-bg:          #0f172a;
+  --sidebar-border:      #1e293b;
+  --sidebar-text:        #94a3b8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-item-hover:  #1e293b;
+  --sidebar-item-active: #1e293b;
+
+  /* Status — Error */
+  --error-bg:     #fef2f2;
+  --error-border: #fecaca;
+  --error-text:   #b91c1c;
+  --error-icon:   #ef4444;
+
+  /* Status — Success */
+  --success-bg:     #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text:   #047857;
+
+  /* Status — Warning */
+  --warning-bg:     #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text:   #b45309;
+
+  /* Status — Info */
+  --info-bg:     #f0f9ff;
+  --info-border: #bae6fd;
+  --info-text:   #0369a1;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}

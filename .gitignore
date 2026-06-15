@@ -10,3 +10,8 @@ coverage
 .env.*
 
 
+# Added by code-review-graph
+.code-review-graph/
+skill.md
+.mcp.json
+CLAUDE.md
