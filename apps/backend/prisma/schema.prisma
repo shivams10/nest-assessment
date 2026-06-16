@@ -8,7 +8,7 @@ datasource db {
 
 /**
  * ============================
- * ENUMS
+ * ENUMS — ASSESSMENT PLATFORM (existing, unchanged)
  * ============================
  */
 
@@ -16,6 +16,8 @@ enum UserRole {
   admin
   moderator
   candidate
+  recruiter   // interview portal
+  interviewer // interview portal
 }
 
 enum SessionStatus {
@@ -54,7 +56,56 @@ enum MonitoringEventType {
 
 /**
  * ============================
- * CORE TABLES
+ * ENUMS — INTERVIEW PORTAL (new)
+ * ============================
+ */
+
+enum CandidateStatus {
+  added
+  interview_scheduled
+  interview_done
+  next_round
+  on_hold
+  rejected
+  hired
+}
+
+enum InterviewSessionStatus {
+  scheduled
+  in_progress
+  completed
+  cancelled
+}
+
+enum InterviewQuestionType {
+  mcq_single
+  mcq_multi
+  subjective
+  coding
+}
+
+enum InterviewQuestionSource {
+  ai_generated
+  manual
+}
+
+enum InterviewRecommendation {
+  strong_hire
+  hire
+  no_hire
+  strong_no_hire
+}
+
+enum HiringDecisionType {
+  next_round
+  on_hold
+  rejected
+  hired
+}
+
+/**
+ * ============================
+ * CORE TABLES — ASSESSMENT PLATFORM
  * ============================
  */
 
@@ -68,18 +119,35 @@ model User {
   collegeSessionId String?
   isActive         Boolean  @default(true)
 
+  // interview portal invite chain
+  invitedBy String?
+  invitedAt DateTime?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  // Inverse relations
+  // assessment platform relations (unchanged)
   recruitmentSessions RecruitmentSession[] @relation("SessionCreator")
   exams               Exam[]               @relation("ExamCreator")
   questionsCreated    Question[]
   bulkUploads         BulkUpload[]
 
+  // self-referential invite chain
+  inviter  User?  @relation("UserInvites", fields: [invitedBy], references: [id])
+  invitees User[] @relation("UserInvites")
+
+  // interview portal relations
+  candidatesAdded         Candidate[]        @relation("CandidateAddedBy")
+  conductedSessions       InterviewSession[] @relation("SessionInterviewer")
+  scheduledSessions       InterviewSession[] @relation("SessionScheduledBy")
+  sessionQuestionsCreated SessionQuestion[]  @relation("SessionQuestionCreator")
+  sessionFeedbacks        SessionFeedback[]  @relation("SessionFeedbackInterviewer")
+  hiringDecisions         HiringDecision[]   @relation("HiringDecisionBy")
+
   @@index([role])
   @@index([collegeSessionId])
+  @@index([invitedBy])
 }
 
 model College {
@@ -118,15 +186,15 @@ model RecruitmentSession {
 }
 
 model Exam {
-  id                   String    @id @default(uuid())
-  title                String
-  description          String?
-  windowStartsAt       DateTime?
-  windowEndsAt         DateTime?
-  durationSeconds      Int
-  isPublished          Boolean   @default(false)
-  masterPasswordHash    String
-  masterPasswordPlain   String?   // Only for admin/moderator display; never exposed to candidates
+  id                  String    @id @default(uuid())
+  title               String
+  description         String?
+  windowStartsAt      DateTime?
+  windowEndsAt        DateTime?
+  durationSeconds     Int
+  isPublished         Boolean   @default(false)
+  masterPasswordHash  String
+  masterPasswordPlain String?
 
   collegeSessionId String?
   createdBy        String
@@ -145,11 +213,11 @@ model Exam {
 }
 
 model Question {
-  id       String           @id @default(uuid())
-  category QuestionCategory
-  stem     String
-  type     QuestionType
-  points   Int              @default(1)
+  id         String             @id @default(uuid())
+  category   QuestionCategory
+  stem       String
+  type       QuestionType
+  points     Int                @default(1)
   difficulty QuestionDifficulty @default(medium)
 
   createdBy String
@@ -221,7 +289,7 @@ model BulkUpload {
 
 /**
  * ============================
- * RUNTIME / HISTORICAL TABLES
+ * RUNTIME / HISTORICAL TABLES — ASSESSMENT PLATFORM
  * ============================
  */
 
@@ -301,4 +369,167 @@ model FinalResult {
   @@index([rank])
   @@index([selectedForNextRound])
   @@index([submissionId, rank])
+}
+
+/**
+ * ============================
+ * INTERVIEW PORTAL TABLES (new)
+ * ============================
+ */
+
+model Candidate {
+  id                String          @id @default(uuid())
+  name              String
+  email             String          @unique
+  phone             String?
+  roleApplyingFor   String
+  yearsOfExperience Int?
+  skills            Json            @default("[]")
+  education         Json            @default("[]")
+  resumeUrl         String?
+  referredBy        String?
+  status            CandidateStatus @default(added)
+
+  addedBy String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  adder            User               @relation("CandidateAddedBy", fields: [addedBy], references: [id])
+  interviewSessions InterviewSession[]
+  hiringDecisions   HiringDecision[]   @relation("HiringDecisionCandidate")
+
+  @@index([status])
+  @@index([addedBy])
+  @@index([email])
+}
+
+model MeetingRoom {
+  id            String   @id @default(uuid())
+  name          String
+  resourceEmail String   @unique
+  location      String?
+  capacity      Int
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  interviewSessions InterviewSession[]
+
+  @@index([isActive])
+}
+
+model InterviewSession {
+  id                   String                 @id @default(uuid())
+  candidateId          String
+  interviewerId        String
+  scheduledById        String
+  roomId               String?
+  scheduledAt          DateTime
+  durationMinutes      Int                    @default(60)
+  meetLink             String?
+  googleCalendarEventId String?
+  status               InterviewSessionStatus @default(scheduled)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate   Candidate    @relation(fields: [candidateId], references: [id])
+  interviewer User         @relation("SessionInterviewer", fields: [interviewerId], references: [id])
+  scheduledBy User         @relation("SessionScheduledBy", fields: [scheduledById], references: [id])
+  room        MeetingRoom? @relation(fields: [roomId], references: [id])
+
+  questions SessionQuestion[]
+  link      SessionLink?
+  note      SessionNote?
+  feedback  SessionFeedback?
+
+  @@index([candidateId])
+  @@index([interviewerId])
+  @@index([scheduledById])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model SessionQuestion {
+  id            String                  @id @default(uuid())
+  sessionId     String
+  prompt        String
+  type          InterviewQuestionType
+  difficulty    QuestionDifficulty      @default(medium)
+  tags          Json                    @default("[]")
+  options       Json?
+  exampleInput  String?
+  exampleOutput String?
+  source        InterviewQuestionSource @default(manual)
+  order         Int                     @default(0)
+
+  createdBy String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  creator User             @relation("SessionQuestionCreator", fields: [createdBy], references: [id])
+
+  @@index([sessionId])
+  @@index([order])
+}
+
+model SessionLink {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  token     String   @unique @default(uuid())
+  expiresAt DateTime
+  sentAt    DateTime?
+  openedAt  DateTime?
+  isExpired Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model SessionNote {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  content   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model SessionFeedback {
+  id                    String                  @id @default(uuid())
+  sessionId             String                  @unique
+  interviewerId         String
+  problemSolvingRating  Int
+  codeQualityRating     Int
+  communicationRating   Int
+  systemDesignRating    Int
+  recommendation        InterviewRecommendation
+  notes                 String?
+  submittedAt           DateTime                @default(now())
+  createdAt             DateTime                @default(now())
+
+  session     InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  interviewer User             @relation("SessionFeedbackInterviewer", fields: [interviewerId], references: [id])
+
+  @@index([interviewerId])
+}
+
+model HiringDecision {
+  id          String             @id @default(uuid())
+  candidateId String
+  decidedBy   String
+  decision    HiringDecisionType
+  notes       String?
+  decidedAt   DateTime           @default(now())
+
+  candidate Candidate @relation("HiringDecisionCandidate", fields: [candidateId], references: [id])
+  decider   User      @relation("HiringDecisionBy", fields: [decidedBy], references: [id])
+
+  @@index([candidateId])
+  @@index([decidedBy])
 }

@@ -1,21 +1,65 @@
 import { createBrowserRouter } from 'react-router-dom'
 
-import { AuthCallbackPage }         from '@/pages/auth/AuthCallbackPage'
-import { LoginPage }                from '@/pages/auth/LoginPage'
-import { NotFoundPage }             from '@/pages/errors/NotFoundPage'
-import { RecruiterDashboardPage }   from '@/pages/recruiter/RecruiterDashboardPage'
-import { InterviewerDashboardPage } from '@/pages/interviewer/InterviewerDashboardPage'
-import { ROUTES }                   from '@/constants/routes'
+import { ProtectedRoute }             from '@/components/auth/ProtectedRoute'
+import { PublicRoute }                from '@/components/auth/PublicRoute'
+import { ROUTES }                     from '@/constants/routes'
+import { RecruiterLayout }            from '@/layouts/RecruiterLayout'
+import { InterviewerLayout }          from '@/layouts/InterviewerLayout'
+import { AuthCallbackPage }           from '@/pages/auth/AuthCallbackPage'
+import { LoginPage }                  from '@/pages/auth/LoginPage'
+import { NotFoundPage }               from '@/pages/errors/NotFoundPage'
+import { InterviewerDashboardPage }   from '@/pages/interviewer/InterviewerDashboardPage'
+import { InterviewerSessionsPage }    from '@/pages/interviewer/InterviewerSessionsPage'
+import { RecruiterCandidatesPage }    from '@/pages/recruiter/RecruiterCandidatesPage'
+import { RecruiterDashboardPage }     from '@/pages/recruiter/RecruiterDashboardPage'
+import { RecruiterSchedulePage }      from '@/pages/recruiter/RecruiterSchedulePage'
+import { RecruiterTeamPage }          from '@/pages/recruiter/RecruiterTeamPage'
 
 export const router = createBrowserRouter([
   {
     errorElement: <NotFoundPage />,
     children: [
-      { path: ROUTES.LOGIN,                element: <LoginPage /> },
-      { path: '/auth/callback',            element: <AuthCallbackPage /> },
-      { path: ROUTES.RECRUITER_DASHBOARD,  element: <RecruiterDashboardPage /> },
-      { path: ROUTES.INTERVIEWER_DASHBOARD,element: <InterviewerDashboardPage /> },
-      { path: '*',                         element: <NotFoundPage /> },
+
+      // Public-only: redirect to dashboard if already logged in
+      {
+        element: <PublicRoute />,
+        children: [
+          { path: ROUTES.LOGIN, element: <LoginPage /> },
+        ],
+      },
+
+      // Auth callback — neither guarded nor public-only
+      { path: '/auth/callback', element: <AuthCallbackPage /> },
+
+      // Protected routes — unauthenticated → login
+      {
+        element: <ProtectedRoute />,
+        children: [
+
+          // Recruiter portal (recruiter + admin)
+          {
+            element: <RecruiterLayout />,
+            children: [
+              { path: ROUTES.RECRUITER_DASHBOARD,  element: <RecruiterDashboardPage /> },
+              { path: ROUTES.RECRUITER_CANDIDATES, element: <RecruiterCandidatesPage /> },
+              { path: ROUTES.RECRUITER_SCHEDULE,   element: <RecruiterSchedulePage /> },
+              { path: ROUTES.RECRUITER_TEAM,       element: <RecruiterTeamPage /> },
+            ],
+          },
+
+          // Interviewer portal
+          {
+            element: <InterviewerLayout />,
+            children: [
+              { path: ROUTES.INTERVIEWER_DASHBOARD, element: <InterviewerDashboardPage /> },
+              { path: ROUTES.INTERVIEWER_SESSIONS,  element: <InterviewerSessionsPage /> },
+            ],
+          },
+
+        ],
+      },
+
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ])
