@@ -1,60 +1,60 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { ROUTES } from '@/constants/routes'
+import { ROLE_REDIRECT, ROUTES } from '@/constants/routes'
 import { decodeToken, tokenStorage } from '@/lib/token'
 
-const ROLE_REDIRECT: Record<string, string> = {
-  recruiter:   ROUTES.RECRUITER_DASHBOARD,
-  interviewer: ROUTES.INTERVIEWER_DASHBOARD,
-  admin:       ROUTES.RECRUITER_DASHBOARD,
-}
+const KNOWN_ERRORS = [
+  'not_registered',
+  'deactivated',
+  'wrong_domain',
+  'authentication_failed',
+  'access_denied',
+]
 
-const toErrorKey = (raw: string): string => {
-  const known = [
-    'not_registered',
-    'deactivated',
-    'wrong_domain',
-    'authentication_failed',
-    'access_denied',
-  ]
-  return known.includes(raw) ? raw : 'auth_failed'
-}
+const toErrorKey = (raw: string): string =>
+  KNOWN_ERRORS.includes(raw) ? raw : 'auth_failed'
 
 export const AuthCallbackPage = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   useEffect(() => {
-    const token = searchParams.get('token')
     const error = searchParams.get('error')
 
     if (error) {
-      void navigate(`${ROUTES.LOGIN}?error=${toErrorKey(decodeURIComponent(error))}`, { replace: true })
+      void navigate(
+        `${ROUTES.LOGIN}?error=${toErrorKey(decodeURIComponent(error))}`,
+        { replace: true },
+      )
       return
     }
 
-    if (!token) {
+    // Server sets ip_access_sig + ip_refresh_sig cookies.
+    // FE receives only the header.payload bodies in the URL.
+    const accessBody  = searchParams.get('access')
+    const refreshBody = searchParams.get('refresh')
+    const roleParam   = searchParams.get('role')
+
+    if (!accessBody || !refreshBody) {
       void navigate(`${ROUTES.LOGIN}?error=auth_failed`, { replace: true })
       return
     }
 
-    const payload = decodeToken(token)
+    // Decode role from the access body (works without the signature)
+    const payload = decodeToken(decodeURIComponent(accessBody))
+    const role    = roleParam ?? payload?.role ?? ''
 
-    if (!payload) {
-      void navigate(`${ROUTES.LOGIN}?error=invalid_token`, { replace: true })
-      return
-    }
-
-    const destination = ROLE_REDIRECT[payload.role]
+    const destination = ROLE_REDIRECT[role]
 
     if (!destination) {
-      tokenStorage.clear()
+      tokenStorage.clearAll()
       void navigate(`${ROUTES.LOGIN}?error=not_registered`, { replace: true })
       return
     }
 
-    tokenStorage.set(token)
+    tokenStorage.set(decodeURIComponent(accessBody), decodeURIComponent(refreshBody))
+
     void navigate(destination, { replace: true })
   }, [searchParams, navigate])
 
