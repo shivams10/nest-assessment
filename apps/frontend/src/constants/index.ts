@@ -11,4 +11,5 @@ export * from './storage'
 export * from './text'
 export * from './navigation'
 export * from './roles'
+// recruiter constants removed — recruiter UI lives in interview-portal-fe
 

@@ -2,11 +2,12 @@ import type { RouteObject } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminGuard } from './AdminGuard'
 import { CandidateGuard } from './CandidateGuard'
+import { RecruiterGuard } from './RecruiterGuard'
 import { HomeLayoutWrapper } from '@/components/HomeLayoutWrapper'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { CandidateLayout } from '@/components/candidate/CandidateLayout'
 import { ErrorPage } from '@/pages/ErrorPage'
-import { ROUTES } from '@/constants'
+import { ROUTES, RECRUITER_ROUTES } from '@/constants'
 
 /**
  * Protected routes - require authentication
@@ -182,6 +183,36 @@ export const protectedRoutes: RouteObject[] = [
                 },
               },
             ],
+          },
+        ],
+      },
+      {
+        // Recruiter routes - require recruiter role
+        element: <RecruiterGuard />,
+        children: [
+          {
+            path: RECRUITER_ROUTES.RECRUITER,
+            errorElement: <ErrorPage />,
+            lazy: async () => {
+              const { RecruiterDashboardPage } = await import('@/pages/recruiter/RecruiterDashboardPage')
+              return { Component: RecruiterDashboardPage }
+            },
+          },
+          {
+            path: RECRUITER_ROUTES.CANDIDATE_DETAILS,
+            errorElement: <ErrorPage />,
+            lazy: async () => {
+              const { CandidateDetailsPage } = await import('@/pages/recruiter/CandidateDetailsPage')
+              return { Component: CandidateDetailsPage }
+            },
+          },
+          {
+            path: RECRUITER_ROUTES.SCHEDULE_INTERVIEW,
+            errorElement: <ErrorPage />,
+            lazy: async () => {
+              const { ScheduleInterviewPage } = await import('@/pages/recruiter/ScheduleInterviewPage')
+              return { Component: ScheduleInterviewPage }
+            },
           },
         ],
       },

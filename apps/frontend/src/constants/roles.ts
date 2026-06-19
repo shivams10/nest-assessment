@@ -8,6 +8,7 @@ export const ROLES = {
   ADMIN: 'admin',
   MODERATOR: 'moderator',
   CANDIDATE: 'candidate',
+  // recruiter role removed from frontend duplicate implementation
 } as const
 
 /**
