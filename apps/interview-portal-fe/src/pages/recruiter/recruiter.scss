@@ -1,0 +1,582 @@
+@use "sass:list";
+@use "shared" as *;
+
+// Pipeline stage badge colours (page-specific — extends the shared .rd-badge shape)
+$stage-colors: (
+  scheduled:        (#F0F9FF, #0369A1, #BAE6FD),
+  feedback:         (#F5F3FF, #6D28D9, #DDD6FE),
+  interviewed:      (#EEF2FF, #4338CA, #C7D2FE),
+  pending:          (#F1F5F9, #475569, #E2E8F0),
+  hired:            (#ECFDF5, #047857, #A7F3D0),
+  rejected:         (#FEF2F2, #B91C1C, #FECACA),
+  "on-hold":        (#FFFBEB, #B45309, #FDE68A),
+  "awaiting-feedback": (#F5F3FF, #6D28D9, #DDD6FE),
+);
+
+@each $key, $vals in $stage-colors {
+  .rd-badge--#{$key} {
+    background: list.nth($vals, 1);
+    color: list.nth($vals, 2);
+    border-color: list.nth($vals, 3);
+  }
+}
+
+// ── Top bar contents (the .rd-topbar shell itself lives in shared) ──────────
+.rd-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.rd-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rd-brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-md;
+  background: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.rd-brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-pri;
+}
+
+.rd-topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: 0 12px;
+  height: 36px;
+  background: $color-subtle;
+  color: $color-text-muted;
+
+  input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: $color-text-pri;
+    width: 160px;
+  }
+}
+
+.rd-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.rd-nav-link {
+  padding: 0 12px;
+  height: 36px;
+  border-radius: $radius-sm;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  color: $color-text-sec;
+
+  &--active {
+    background: $color-subtle;
+    color: $color-text-pri;
+  }
+}
+
+// ── Page body ────────────────────────────────────────────────────────────────
+.rd-body {
+  padding: 24px;
+}
+
+.rd-breadcrumb {
+  font-size: 13px;
+  color: $color-text-muted;
+  margin-bottom: 4px;
+}
+
+.rd-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: $color-text-pri;
+  margin: 0 0 20px;
+}
+
+// ── Stat cards ───────────────────────────────────────────────────────────────
+.rd-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.rd-stat-card {
+  flex: 1 1 0;
+  min-width: 0;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rd-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: $color-primary-lt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  flex-shrink: 0;
+}
+
+.rd-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: $color-text-muted;
+  margin-bottom: 2px;
+}
+
+.rd-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: $color-text-pri;
+  line-height: 1;
+}
+
+// ── Content row (table + detail panel) ──────────────────────────────────────
+.rd-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+// ── Table card ───────────────────────────────────────────────────────────────
+.rd-table-card {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rd-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid $color-border;
+  gap: 12px;
+}
+
+.rd-table-toolbar-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: $color-text-pri;
+}
+
+.rd-table-toolbar-meta {
+  font-size: 12px;
+  color: $color-text-muted;
+  margin-top: 1px;
+}
+
+.rd-table-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rd-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: 0 12px;
+  background: $color-surface;
+  color: $color-text-muted;
+
+  input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: $color-text-pri;
+    width: 120px;
+  }
+}
+
+.rd-table-header-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr;
+  padding: 0 16px;
+  height: 40px;
+  align-items: center;
+  background: $color-bg;
+  border-bottom: 1px solid $color-border;
+}
+
+.rd-table-header-cell {
+  font-size: 12px;
+  font-weight: 500;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rd-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr;
+  padding: 0 16px;
+  height: 52px;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid $color-subtle;
+  border-left: 2px solid transparent;
+  background: $color-surface;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover { background: $color-bg; }
+
+  &--selected {
+    background: $color-primary-lt;
+    border-left-color: $color-primary;
+
+    &:hover { background: $color-primary-lt; }
+  }
+}
+
+.rd-table-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: $color-text-muted;
+  font-size: 13px;
+}
+
+.rd-candidate-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rd-candidate-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: $color-text-pri;
+}
+
+.rd-candidate-email {
+  font-size: 12px;
+  color: $color-text-muted;
+}
+
+.rd-role-text {
+  font-size: 13px;
+  color: $color-text-pri;
+}
+
+.rd-dept-text {
+  font-size: 12px;
+  color: $color-text-muted;
+}
+
+// ── Pagination ───────────────────────────────────────────────────────────────
+.rd-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid $color-border;
+}
+
+.rd-pagination-info {
+  font-size: 12px;
+  color: $color-text-muted;
+}
+
+.rd-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rd-pagination-btn {
+  height: 30px;
+  min-width: 30px;
+  padding: 0 8px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-surface;
+  color: $color-text-sec;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: #fff;
+  }
+}
+
+// ── Detail side panel ────────────────────────────────────────────────────────
+.rd-detail-panel {
+  width: 272px;
+  flex-shrink: 0;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.rd-detail-header {
+  background: $color-primary;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rd-detail-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.rd-detail-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rd-detail-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.rd-detail-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.rd-detail-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2px;
+}
+
+.rd-detail-nav-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+
+  &:hover { background: rgba(255, 255, 255, 0.3); }
+}
+
+.rd-detail-body {
+  padding: 16px 20px;
+}
+
+.rd-detail-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rd-detail-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: $color-text-sec;
+  font-size: 13px;
+}
+
+.rd-detail-skills {
+  border-top: 1px solid $color-border;
+  padding-top: 12px;
+}
+
+.rd-skills-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: $color-text-pri;
+}
+
+.rd-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+// ── Add Candidate modal: file upload ─────────────────────────────────────────
+.rd-upload-box {
+  border: 1.5px dashed $color-primary-bdr;
+  border-radius: $radius-md;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  background: $color-primary-lt;
+}
+
+.rd-upload-icon {
+  color: $color-primary;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+}
+
+.rd-upload-text {
+  font-size: 13px;
+  color: $color-text-sec;
+
+  strong {
+    color: $color-primary;
+    font-weight: 600;
+  }
+
+  .rd-upload-filename {
+    color: $color-primary;
+    font-weight: 500;
+  }
+}
+
+.rd-upload-hint {
+  font-size: 11px;
+  color: $color-text-muted;
+  margin-top: 4px;
+}
+
+// ── Filter drawer ────────────────────────────────────────────────────────────
+.rd-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1100;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rd-drawer {
+  width: 320px;
+  max-width: 100%;
+  height: 100%;
+  background: $color-surface;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  animation: rd-drawer-in 0.18s ease-out;
+}
+
+@keyframes rd-drawer-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.rd-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid $color-border;
+}
+
+.rd-drawer-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $color-text-pri;
+}
+
+.rd-drawer-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.rd-drawer-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid $color-border;
+}
+
+.rd-drawer-footer .rd-btn-secondary,
+.rd-drawer-footer .rd-btn-primary {
+  flex: 1;
+  justify-content: center;
+}
+
+.rd-filter-count {
+  background: $color-primary;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}

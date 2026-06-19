@@ -1,4 +1,4 @@
-export type CandidateStatus = 'Screening' | 'Interviewing' | 'Offer' | 'Hired'
+export type CandidateStatus = 'Pending' | 'Scheduled' | 'Interviewed' | 'Awaiting Feedback' | 'Hired' | 'Rejected'
 
 export type RecruiterCandidate = {
   id: string
@@ -7,6 +7,7 @@ export type RecruiterCandidate = {
   email: string
   location: string
   experience: string
+  education: string
   status: CandidateStatus
   lastActivity: string
   nextStep: string
@@ -20,8 +21,9 @@ export const recruiterCandidates: RecruiterCandidate[] = [
     email: 'amina.patel@interop.com',
     location: 'Austin, TX',
     experience: '5 years',
-    status: 'Interviewing',
+    status: 'Interviewed',
     lastActivity: 'Resume reviewed · 3h ago',
+    education: 'B.S. Computer Science, UT Austin',
     nextStep: 'Schedule final panel',
   },
   {
@@ -31,7 +33,8 @@ export const recruiterCandidates: RecruiterCandidate[] = [
     email: 'ethan.brooks@worklab.com',
     location: 'Remote',
     experience: '6 years',
-    status: 'Screening',
+    education: 'M.A. Interaction Design, RISD',
+    status: 'Scheduled',
     lastActivity: 'Phone screen requested · Yesterday',
     nextStep: 'Book intro interview',
   },
@@ -42,7 +45,8 @@ export const recruiterCandidates: RecruiterCandidate[] = [
     email: 'nina.wong@techflow.io',
     location: 'New York, NY',
     experience: '7 years',
-    status: 'Offer',
+    education: 'B.S. Software Engineering, NYU',
+    status: 'Hired',
     lastActivity: 'Hiring manager feedback · 1d ago',
     nextStep: 'Send offer letter',
   },
