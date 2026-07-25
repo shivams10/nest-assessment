@@ -65,13 +65,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
 
       if (!user) {
-        // Create new recruiter user via Google OAuth
+        // Create new candidate user
         user = await this.prisma.user.create({
           data: {
             email,
             firstName: firstName || null,
             lastName: lastName || null,
-            role: UserRole.recruiter,
+            role: UserRole.candidate,
             isActive: true,
             passwordHash: null,
           },

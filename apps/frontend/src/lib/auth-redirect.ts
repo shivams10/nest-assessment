@@ -16,6 +16,7 @@ export function getRedirectRouteByRole(): string {
   if (role && ADMIN_ROLES.includes(role as UserRole)) {
     return ROUTES.ADMIN
   }
+
   if (role === ROLES.CANDIDATE) {
     return ROUTES.CANDIDATE
   }
