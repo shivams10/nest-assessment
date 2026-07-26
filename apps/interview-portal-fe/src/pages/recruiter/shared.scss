@@ -1,0 +1,254 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared design tokens + generic building blocks for the Recruitment feature.
+// Both RecruiterDashboardPage.scss and CandidateDetailsPage.scss `@use` this
+// file — anything defined here should only ever be defined ONCE, here.
+// ─────────────────────────────────────────────────────────────────────────────
+@use "sass:list";
+
+// ── Design System tokens ─────────────────────────────────────────────────────
+$color-bg:            #F8FAFC;
+$color-surface:       #FFFFFF;
+$color-subtle:        #F1F5F9;
+$color-border:        #E2E8F0;
+$color-border-strong: #CBD5E1;
+$color-text-pri:      #0F172A;
+$color-text-sec:      #475569;
+$color-text-muted:    #94A3B8;
+$color-primary:       #4F46E5;
+$color-primary-hov:   #4338CA;
+$color-primary-lt:    #EEF2FF;
+$color-primary-bdr:   #C7D2FE;
+$color-primary-txt:   #4338CA;
+
+$font-family: Inter, system-ui, sans-serif;
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+.rd-page {
+  min-height: 100vh;
+  background: $color-bg;
+  font-family: $font-family;
+  color: $color-text-pri;
+}
+
+// ── Top bar shell (page-specific contents go inside) ────────────────────────
+.rd-topbar {
+  height: 56px;
+  background: $color-surface;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+// ── Generic card / panel ─────────────────────────────────────────────────────
+.rd-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: 20px 24px;
+}
+
+// ── Avatar ───────────────────────────────────────────────────────────────────
+.rd-avatar {
+  border-radius: 50%;
+  background: $color-primary-lt;
+  color: $color-primary-txt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-family: $font-family;
+}
+
+// ── Pill / badge base ────────────────────────────────────────────────────────
+.rd-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  display: inline-block;
+  white-space: nowrap;
+  border: 1px solid $color-border;
+  background: $color-subtle;
+  color: $color-text-sec;
+}
+
+.rd-skill-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  display: inline-block;
+  white-space: nowrap;
+  background: $color-primary-lt;
+  color: $color-primary-txt;
+  border: 1px solid $color-primary-bdr;
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+.rd-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: $radius-sm;
+  border: none;
+  background: $color-primary;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover { background: $color-primary-hov; }
+}
+
+.rd-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-surface;
+  color: $color-text-pri;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rd-icon-btn {
+  height: 36px;
+  width: 36px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-surface;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $color-text-sec;
+
+  &--active {
+    background: $color-primary-lt;
+    border-color: $color-primary-bdr;
+    color: $color-primary;
+  }
+}
+
+.rd-chevron {
+  transition: transform 0.2s;
+
+  &--open { transform: rotate(180deg); }
+}
+
+// ── Modal shell ──────────────────────────────────────────────────────────────
+.rd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.rd-modal {
+  background: $color-surface;
+  border-radius: $radius-lg;
+  padding: 24px;
+  width: 100%;
+  max-width: 512px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+
+.rd-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.rd-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: $color-text-pri;
+}
+
+.rd-modal-subtitle {
+  font-size: 13px;
+  color: $color-text-sec;
+  margin-top: 2px;
+}
+
+.rd-modal-close {
+  background: $color-subtle;
+  border: none;
+  border-radius: $radius-sm;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $color-text-sec;
+}
+
+.rd-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+// ── Shared form fields ───────────────────────────────────────────────────────
+.rd-form-group {
+  margin-bottom: 14px;
+}
+
+.rd-form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.rd-form-input,
+.rd-form-select,
+.rd-form-textarea {
+  width: 100%;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  color: $color-text-pri;
+  outline: none;
+  background: $color-surface;
+  box-sizing: border-box;
+  font-family: $font-family;
+
+  &:focus {
+    border-color: $color-primary-bdr;
+  }
+}
+
+.rd-form-input,
+.rd-form-select {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.rd-form-textarea {
+  padding: 10px 12px;
+  resize: none;
+}

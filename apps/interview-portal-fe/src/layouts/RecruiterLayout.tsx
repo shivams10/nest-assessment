@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 
+import '@/pages/recruiter/recruiter.scss'
 import { CalendarIcon, ClipboardListIcon, HomeIcon, UsersIcon } from '@/components/icons'
 import { ROUTES } from '@/constants/routes'
 import { accessTokenStore, decodeToken } from '@/lib/token'

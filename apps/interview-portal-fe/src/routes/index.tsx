@@ -14,6 +14,8 @@ import { RecruiterCandidatesPage }    from '@/pages/recruiter/RecruiterCandidate
 import { RecruiterDashboardPage }     from '@/pages/recruiter/RecruiterDashboardPage'
 import { RecruiterSchedulePage }      from '@/pages/recruiter/RecruiterSchedulePage'
 import { RecruiterTeamPage }          from '@/pages/recruiter/RecruiterTeamPage'
+import { CandidateDetailsPage }       from '@/pages/recruiter/CandidateDetailsPage'
+import { ScheduleInterviewPage }     from '@/pages/recruiter/ScheduleInterviewPage'
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +46,9 @@ export const router = createBrowserRouter([
               { path: ROUTES.RECRUITER_CANDIDATES, element: <RecruiterCandidatesPage /> },
               { path: ROUTES.RECRUITER_SCHEDULE,   element: <RecruiterSchedulePage /> },
               { path: ROUTES.RECRUITER_TEAM,       element: <RecruiterTeamPage /> },
+              // Candidate details + scheduling routes
+              { path: '/recruit/candidates/:candidateId', element: <CandidateDetailsPage /> },
+              { path: '/recruit/candidates/:candidateId/schedule', element: <ScheduleInterviewPage /> },
             ],
           },
 
