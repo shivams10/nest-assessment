@@ -5,7 +5,7 @@ import { ConfigService } from '@config/config.service';
 
 export interface JwtPayload {
   sub: string;
-  role: 'admin' | 'moderator' | 'candidate';
+  role: 'admin' | 'moderator' | 'candidate' | 'recruiter' | 'interviewer';
 }
 
 @Injectable()
