@@ -252,3 +252,13 @@ $radius-lg: 12px;
   padding: 10px 12px;
   resize: none;
 }
+
+.rd-form-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  padding: 8px 12px;
+  margin: -4px 0 14px;
+}

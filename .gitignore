@@ -9,6 +9,9 @@ coverage
 .env
 .env.*
 
+# Uploaded resumes and other user-supplied files
+apps/backend/uploads/
+
 
 # Added by code-review-graph
 .code-review-graph/

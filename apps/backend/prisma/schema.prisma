@@ -535,3 +535,21 @@ model HiringDecision {
   @@index([candidateId])
   @@index([decidedBy])
 }
+
+// Single-row credential for the dedicated "calendar bot" Google account used
+// to create interview events. `id` is always the fixed value "default".
+model CalendarCredential {
+  id           String   @id @default("default")
+  refreshToken String
+  updatedAt    DateTime @updatedAt
+}
+
+// Per-interviewer credential (calendar.freebusy scope only) so scheduling can
+// check an interviewer's REAL Google Calendar availability, not just sessions
+// booked through this app. `userId` is the interviewer's own User.id — no
+// formal Prisma relation, mirroring CalendarCredential's minimal footprint.
+model InterviewerCalendarCredential {
+  userId       String   @id
+  refreshToken String
+  updatedAt    DateTime @updatedAt
+}

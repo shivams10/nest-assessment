@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { ConfigService } from '@config/config.service';
 import { PrismaService } from '@prisma/prisma.service';
-import { UserRole } from '@prisma/client';
 
 export interface GoogleProfile {
   emails: Array<{ value: string }>;
@@ -56,29 +55,27 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         return done(new Error('No email found in Google profile'), undefined);
       }
 
-      const firstName = profile.name?.givenName || '';
-      const lastName = profile.name?.familyName || '';
-
-      // Find or create user
-      let user = await this.prisma.user.findUnique({
+      // Pre-registration model: a User row must already exist (created via an
+      // invite flow) before Google OAuth can be used to log in. Google only
+      // proves identity, not authorization.
+      const user = await this.prisma.user.findUnique({
         where: { email },
       });
 
       if (!user) {
-        // Create new candidate user
-        user = await this.prisma.user.create({
-          data: {
-            email,
-            firstName: firstName || null,
-            lastName: lastName || null,
-            role: UserRole.candidate,
-            isActive: true,
-            passwordHash: null,
-          },
-        });
-      } else if (user.deletedAt) {
+        return done(
+          new Error('You are not registered on this portal'),
+          undefined,
+        );
+      }
+
+      if (user.deletedAt) {
         // User was soft-deleted, don't allow login
         return done(new Error('Account not found'), undefined);
+      }
+
+      if (!user.isActive) {
+        return done(new Error('Your account has been deactivated'), undefined);
       }
 
       // Return user entity
@@ -91,4 +88,3 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     }
   }
 }
-

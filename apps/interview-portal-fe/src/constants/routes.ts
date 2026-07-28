@@ -4,6 +4,7 @@ export const ROUTES = {
   RECRUITER_CANDIDATES:  '/recruit/candidates',
   RECRUITER_SCHEDULE:    '/recruit/schedule',
   RECRUITER_TEAM:        '/recruit/team',
+  RECRUITER_ROOMS:       '/recruit/rooms',
   INTERVIEWER_DASHBOARD: '/interview/dashboard',
   INTERVIEWER_SESSIONS:  '/interview/sessions',
 } as const

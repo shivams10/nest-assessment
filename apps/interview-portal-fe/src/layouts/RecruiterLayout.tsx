@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
 
 import '@/pages/recruiter/recruiter.scss'
-import { CalendarIcon, ClipboardListIcon, HomeIcon, UsersIcon } from '@/components/icons'
+import { BuildingIcon, CalendarIcon, ClipboardListIcon, HomeIcon, UsersIcon } from '@/components/icons'
 import { ROUTES } from '@/constants/routes'
 import { accessTokenStore, decodeToken } from '@/lib/token'
 import { AppLayout } from './AppLayout'
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard',  icon: <HomeIcon size={16} />,          href: ROUTES.RECRUITER_DASHBOARD  },
   { label: 'Candidates', icon: <UsersIcon size={16} />,         href: ROUTES.RECRUITER_CANDIDATES },
   { label: 'Schedule',   icon: <CalendarIcon size={16} />,      href: ROUTES.RECRUITER_SCHEDULE   },
+  { label: 'Rooms',      icon: <BuildingIcon size={16} />,      href: ROUTES.RECRUITER_ROOMS      },
   { label: 'Team',       icon: <ClipboardListIcon size={16} />, href: ROUTES.RECRUITER_TEAM       },
 ]
 

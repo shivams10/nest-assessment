@@ -15,4 +15,7 @@ export const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().optional(),
   OPENAI_MAX_TOKENS: z.string().optional(),
+  RESUME_UPLOAD_DIR: z.string().optional(),
+  GOOGLE_CALENDAR_CALLBACK_URL: z.string().optional(),
+  GOOGLE_INTERVIEWER_CALENDAR_CALLBACK_URL: z.string().optional(),
 });

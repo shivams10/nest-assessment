@@ -15,6 +15,11 @@ import { AdminModule } from './modules/admin/admin.module';
 import { RecruitmentSessionModule } from './modules/recruitment-sessions/recruitment-session.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { AiModule } from './modules/ai/ai.module';
+import { UsersModule } from './modules/users/users.module';
+import { InterviewCandidatesModule } from './modules/interview-candidates/interview-candidates.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { RoomsModule } from './modules/rooms/rooms.module';
+import { SessionsModule } from './modules/sessions/sessions.module';
 
 @Module({
   imports: [
@@ -35,6 +40,11 @@ import { AiModule } from './modules/ai/ai.module';
     RecruitmentSessionModule,
     QuestionsModule,
     AiModule,
+    UsersModule,
+    InterviewCandidatesModule,
+    CalendarModule,
+    RoomsModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [

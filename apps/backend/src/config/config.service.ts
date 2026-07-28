@@ -63,4 +63,16 @@ export class ConfigService {
     }
     return 4000;
   }
+
+  get resumeUploadDir(): string {
+    return this.env.RESUME_UPLOAD_DIR || './uploads/resumes';
+  }
+
+  get googleCalendarCallbackUrl(): string | undefined {
+    return this.env.GOOGLE_CALENDAR_CALLBACK_URL;
+  }
+
+  get googleInterviewerCalendarCallbackUrl(): string | undefined {
+    return this.env.GOOGLE_INTERVIEWER_CALENDAR_CALLBACK_URL;
+  }
 }

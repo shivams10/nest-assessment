@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { recruiterCandidates, type CandidateStatus } from './recruiterCandidateData'
+import { useCandidates, type CandidateStatus } from '@/hooks/useCandidates'
+import { useCandidate } from '@/hooks/useCandidate'
+import { useSessions } from '@/hooks/useSessions'
+import { useTeamMembers } from '@/hooks/useTeamMembers'
 import { ROUTES } from '@/constants/routes'
+import { AddCandidateModal } from './components/AddCandidateModal'
 import './recruiter.scss'
 import './shared.scss'
 
@@ -24,9 +28,10 @@ const IconCheck = () => (
     <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
   </svg>
 )
-const IconMsg = () => (
+const IconTeam = () => (
   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 )
 const IconSearch = () => (
@@ -66,12 +71,6 @@ const IconChevron = ({ open }: { open: boolean }) => (
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 )
-const IconUpload = () => (
-  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-  </svg>
-)
 const IconX = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -79,16 +78,34 @@ const IconX = () => (
 )
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-const slugify = (value: string) => value.toLowerCase().trim().replace(/\s+/g, '-')
+// Maps the real CandidateStatus enum to a display label and to one of the
+// badge color slugs already defined in recruiter.scss ($stage-colors) —
+// reusing the closest existing color rather than inventing new CSS.
+const STATUS_META: Record<CandidateStatus, { label: string; slug: string }> = {
+  added:               { label: 'Added',               slug: 'pending' },
+  interview_scheduled: { label: 'Interview Scheduled',  slug: 'scheduled' },
+  interview_done:      { label: 'Interview Done',       slug: 'interviewed' },
+  next_round:          { label: 'Next Round',           slug: 'awaiting-feedback' },
+  on_hold:             { label: 'On Hold',              slug: 'on-hold' },
+  rejected:            { label: 'Rejected',             slug: 'rejected' },
+  hired:               { label: 'Hired',                slug: 'hired' },
+}
 
-const STATUS_OPTIONS: CandidateStatus[] = [
-  'Pending', 'Scheduled', 'Interviewed', 'Awaiting Feedback', 'Hired', 'Rejected',
-]
+const STATUS_OPTIONS = Object.keys(STATUS_META) as CandidateStatus[]
 
-const PAGE_SIZE = 8
+const isThisWeek = (isoDate: string): boolean => {
+  const date = new Date(isoDate)
+  const now = new Date()
+  const day = now.getDay()
+  const mondayOffset = day === 0 ? 6 : day - 1
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 7)
+  return date >= weekStart && date < weekEnd
+}
 
-type Filters = { name: string; email: string; status: string; role: string }
-const EMPTY_FILTERS: Filters = { name: '', email: '', status: '', role: '' }
+type Filters = { status: CandidateStatus | '' }
+const EMPTY_FILTERS: Filters = { status: '' }
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
 const Avatar = ({ name, size = 36 }: { name: string; size?: number }) => {
@@ -112,69 +129,9 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
 )
 
 // ── Status badge ─────────────────────────────────────────────────────────────
-const StatusBadge = ({ status }: { status?: string }) => (
-  <span className={`rd-badge rd-badge--${slugify(status ?? 'pending')}`}>{status ?? 'Pending'}</span>
+const StatusBadge = ({ status }: { status: CandidateStatus }) => (
+  <span className={`rd-badge rd-badge--${STATUS_META[status].slug}`}>{STATUS_META[status].label}</span>
 )
-
-// ── Add Candidate Modal ───────────────────────────────────────────────────────
-const AddCandidateModal = ({ onClose }: { onClose: () => void }) => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '' })
-  const [file, setFile] = useState<File | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(p => ({ ...p, [k]: e.target.value }))
-
-  return (
-    <div className="rd-modal-overlay" onClick={onClose}>
-      <div className="rd-modal" onClick={e => e.stopPropagation()}>
-        <div className="rd-modal-header">
-          <div>
-            <div className="rd-modal-title">Add Candidate</div>
-            <div className="rd-modal-subtitle">Fill in the candidate details below</div>
-          </div>
-          <button onClick={onClose} className="rd-modal-close"><IconX /></button>
-        </div>
-
-        {([
-          { label: 'Full Name', key: 'name', type: 'text', placeholder: 'e.g. Sarah Jenkins' },
-          { label: 'Email Address', key: 'email', type: 'email', placeholder: 'sarah@example.com' },
-          { label: 'Phone Number', key: 'phone', type: 'tel', placeholder: '+1 (555) 000-0000' },
-        ] as const).map(({ label, key, type, placeholder }) => (
-          <div key={key} className="rd-form-group">
-            <label className="rd-form-label">{label}</label>
-            <input
-              type={type}
-              placeholder={placeholder}
-              value={form[key]}
-              onChange={set(key)}
-              className="rd-form-input"
-            />
-          </div>
-        ))}
-
-        <div className="rd-form-group">
-          <label className="rd-form-label">Resume</label>
-          <div onClick={() => fileRef.current?.click()} className="rd-upload-box">
-            <div className="rd-upload-icon"><IconUpload /></div>
-            <div className="rd-upload-text">
-              {file
-                ? <span className="rd-upload-filename">{file.name}</span>
-                : <><strong>Click to upload</strong> or drag & drop</>}
-            </div>
-            <div className="rd-upload-hint">PDF, DOC, DOCX up to 10MB</div>
-          </div>
-          <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }}
-            onChange={e => setFile(e.target.files?.[0] ?? null)} />
-        </div>
-
-        <div className="rd-modal-actions">
-          <button onClick={onClose} className="rd-btn-secondary">Cancel</button>
-          <button className="rd-btn-primary">Add Candidate</button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Filter Drawer ──────────────────────────────────────────────────────────────
 const FilterDrawer = ({
@@ -188,9 +145,6 @@ const FilterDrawer = ({
 }) => {
   const [draft, setDraft] = useState<Filters>(filters)
 
-  const update = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setDraft(p => ({ ...p, [key]: e.target.value }))
-
   return (
     <div className="rd-drawer-overlay" onClick={onClose}>
       <div className="rd-drawer" onClick={e => e.stopPropagation()}>
@@ -201,44 +155,15 @@ const FilterDrawer = ({
 
         <div className="rd-drawer-body">
           <div className="rd-form-group">
-            <label className="rd-form-label">Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Amina Patel"
-              value={draft.name}
-              onChange={update('name')}
-              className="rd-form-input"
-            />
-          </div>
-
-          <div className="rd-form-group">
-            <label className="rd-form-label">Email</label>
-            <input
-              type="text"
-              placeholder="e.g. amina@interop.com"
-              value={draft.email}
-              onChange={update('email')}
-              className="rd-form-input"
-            />
-          </div>
-
-          <div className="rd-form-group">
             <label className="rd-form-label">Status</label>
-            <select value={draft.status} onChange={update('status')} className="rd-form-select">
+            <select
+              value={draft.status}
+              onChange={e => setDraft({ status: e.target.value as CandidateStatus | '' })}
+              className="rd-form-select"
+            >
               <option value="">All statuses</option>
-              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
             </select>
-          </div>
-
-          <div className="rd-form-group">
-            <label className="rd-form-label">Applied Role</label>
-            <input
-              type="text"
-              placeholder="e.g. Frontend Engineer"
-              value={draft.role}
-              onChange={update('role')}
-              className="rd-form-input"
-            />
           </div>
         </div>
 
@@ -254,21 +179,23 @@ const FilterDrawer = ({
 }
 
 // ── Candidate Detail Side Panel ───────────────────────────────────────────────
-const DetailPanel = ({ candidate, onNavigate }: { candidate: (typeof recruiterCandidates)[0]; onNavigate: () => void }) => {
+const DetailPanel = ({ candidateId, onNavigate }: { candidateId: string; onNavigate: () => void }) => {
   const [skillsOpen, setSkillsOpen] = useState(true)
-  const skills = ['React', 'TypeScript', 'Node.js', 'System Design', 'Cloud Ops']
+  const { data: candidate } = useCandidate(candidateId)
+
+  if (!candidate) return null
+
   const initials = candidate.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <div className="rd-detail-panel">
-      {/* indigo header strip — now carries the candidate identity */}
       <div className="rd-detail-header">
         <div className="rd-detail-header-top">
           <div className="rd-detail-header-info">
             <div className="rd-detail-avatar">{initials}</div>
             <div>
               <div className="rd-detail-name">{candidate.name}</div>
-              <div className="rd-detail-role">{candidate.role}</div>
+              <div className="rd-detail-role">{candidate.roleApplyingFor}</div>
             </div>
           </div>
           <button onClick={onNavigate} className="rd-detail-nav-btn"><IconArrow /></button>
@@ -278,7 +205,7 @@ const DetailPanel = ({ candidate, onNavigate }: { candidate: (typeof recruiterCa
       <div className="rd-detail-body">
         <div className="rd-detail-contact">
           <div className="rd-detail-contact-row"><IconMail />{candidate.email}</div>
-          <div className="rd-detail-contact-row"><IconPhone />+1 (555) 0912</div>
+          <div className="rd-detail-contact-row"><IconPhone />{candidate.phone ?? 'Not provided'}</div>
         </div>
 
         <div className="rd-detail-skills">
@@ -286,9 +213,13 @@ const DetailPanel = ({ candidate, onNavigate }: { candidate: (typeof recruiterCa
             Key Skills <IconChevron open={skillsOpen} />
           </button>
           {skillsOpen && (
-            <div className="rd-skills-list">
-              {skills.map(s => <span key={s} className="rd-skill-chip">{s}</span>)}
-            </div>
+            candidate.skills.length === 0 ? (
+              <p className="rd-dept-text">No skills parsed from resume yet.</p>
+            ) : (
+              <div className="rd-skills-list">
+                {candidate.skills.map(s => <span key={s} className="rd-skill-chip">{s}</span>)}
+              </div>
+            )
           )}
         </div>
       </div>
@@ -304,38 +235,31 @@ export const RecruiterDashboardPage = () => {
   const [showFilterDrawer, setShowFilterDrawer] = useState(false)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [page, setPage] = useState(1)
-  const [selected, setSelected] = useState(recruiterCandidates[0] ?? null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const activeFilterCount = Object.values(filters).filter(Boolean).length
+  const activeFilterCount = filters.status ? 1 : 0
 
-  const filtered = useMemo(
-    () => recruiterCandidates.filter(c => {
-      const matchesQuery = [c.name, c.email, c.role].join(' ').toLowerCase().includes(query.toLowerCase())
-      const matchesName = filters.name ? c.name.toLowerCase().includes(filters.name.toLowerCase()) : true
-      const matchesEmail = filters.email ? c.email.toLowerCase().includes(filters.email.toLowerCase()) : true
-      const matchesStatus = filters.status ? (c.status ?? 'Pending') === filters.status : true
-      const matchesRole = filters.role ? c.role.toLowerCase().includes(filters.role.toLowerCase()) : true
-      return matchesQuery && matchesName && matchesEmail && matchesStatus && matchesRole
-    }),
-    [query, filters],
-  )
+  const { data: candidatesPage } = useCandidates({
+    page,
+    search: query || undefined,
+    status: filters.status || undefined,
+  })
+  const items = candidatesPage?.items ?? []
+  const meta = candidatesPage?.meta
+  const effectiveSelectedId = selectedId ?? items[0]?.id ?? null
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
-  )
+  const { data: totalCandidates } = useCandidates({ limit: 1 })
+  const { data: pendingDecisions } = useCandidates({ status: 'interview_done', limit: 1 })
+  const { data: sessions } = useSessions()
+  const { data: team } = useTeamMembers()
 
-  // keep page in range whenever the filtered set changes size
-  useEffect(() => {
-    setPage(p => Math.min(p, totalPages))
-  }, [totalPages])
+  const interviewsThisWeek = (sessions ?? []).filter(s => isThisWeek(s.scheduledAt)).length
 
   const stats = [
-    { icon: <IconUsers />, label: 'Total Candidates', value: 1248 },
-    { icon: <IconCal />,   label: 'Interviews This Week', value: 42 },
-    { icon: <IconCheck />, label: 'Pending Decisions', value: 12 },
-    { icon: <IconMsg />,   label: 'Feedbacks Received', value: 89 },
+    { icon: <IconUsers />, label: 'Total Candidates',    value: totalCandidates?.meta.total ?? 0 },
+    { icon: <IconCal />,   label: 'Interviews This Week', value: interviewsThisWeek },
+    { icon: <IconCheck />, label: 'Pending Decisions',    value: pendingDecisions?.meta.total ?? 0 },
+    { icon: <IconTeam />,  label: 'Team Size',            value: team?.meta.total ?? 0 },
   ]
 
   return (
@@ -359,6 +283,8 @@ export const RecruiterDashboardPage = () => {
               { label: 'Overview', route: ROUTES.RECRUITER_DASHBOARD, active: true },
               { label: 'Candidates', route: ROUTES.RECRUITER_CANDIDATES },
               { label: 'Schedule', route: ROUTES.RECRUITER_SCHEDULE },
+              { label: 'Rooms', route: ROUTES.RECRUITER_ROOMS },
+              { label: 'Team', route: ROUTES.RECRUITER_TEAM },
             ].map(({ label, route, active }) => (
               <button
                 key={label}
@@ -392,12 +318,16 @@ export const RecruiterDashboardPage = () => {
             <div className="rd-table-toolbar">
               <div>
                 <div className="rd-table-toolbar-title">Active Candidates</div>
-                <div className="rd-table-toolbar-meta">Managing {filtered.length} profiles in current view</div>
+                <div className="rd-table-toolbar-meta">Managing {meta?.total ?? 0} profiles in current view</div>
               </div>
               <div className="rd-table-toolbar-actions">
                 <div className="rd-search-box">
                   <IconSearch />
-                  <input placeholder="Search..." value={query} onChange={e => setQuery(e.target.value)} />
+                  <input
+                    placeholder="Search..."
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setPage(1) }}
+                  />
                 </div>
                 <div style={{ position: 'relative' }}>
                   <button
@@ -417,14 +347,14 @@ export const RecruiterDashboardPage = () => {
               ))}
             </div>
 
-            {paginated.length === 0 ? (
+            {items.length === 0 ? (
               <div className="rd-table-empty">No candidates match your search or filters.</div>
             ) : (
-              paginated.map(c => (
+              items.map(c => (
                 <div
                   key={c.id}
-                  onClick={() => setSelected(c)}
-                  className={`rd-table-row${selected?.id === c.id ? ' rd-table-row--selected' : ''}`}
+                  onClick={() => setSelectedId(c.id)}
+                  className={`rd-table-row${effectiveSelectedId === c.id ? ' rd-table-row--selected' : ''}`}
                 >
                   <div className="rd-candidate-cell">
                     <Avatar name={c.name} />
@@ -434,8 +364,7 @@ export const RecruiterDashboardPage = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="rd-role-text">{c.role}</div>
-                    <div className="rd-dept-text">{c.department ?? 'Engineering'}</div>
+                    <div className="rd-role-text">{c.roleApplyingFor}</div>
                   </div>
                   <div>
                     <StatusBadge status={c.status} />
@@ -444,28 +373,28 @@ export const RecruiterDashboardPage = () => {
               ))
             )}
 
-            {filtered.length > PAGE_SIZE && (
+            {meta && meta.totalPages > 1 && (
               <div className="rd-pagination">
                 <div className="rd-pagination-info">
-                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+                  Showing {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
                 </div>
                 <div className="rd-pagination-controls">
                   <button
                     className="rd-pagination-btn"
-                    disabled={page === 1}
+                    disabled={meta.page === 1}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                   >Prev</button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                  {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(n => (
                     <button
                       key={n}
                       onClick={() => setPage(n)}
-                      className={`rd-pagination-btn${n === page ? ' rd-pagination-btn--active' : ''}`}
+                      className={`rd-pagination-btn${n === meta.page ? ' rd-pagination-btn--active' : ''}`}
                     >{n}</button>
                   ))}
                   <button
                     className="rd-pagination-btn"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={meta.page === meta.totalPages}
+                    onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
                   >Next</button>
                 </div>
               </div>
@@ -473,8 +402,11 @@ export const RecruiterDashboardPage = () => {
           </div>
 
           {/* detail panel */}
-          {selected && (
-            <DetailPanel candidate={selected} onNavigate={() => navigate(`/recruit/candidates/${selected.id}`)} />
+          {effectiveSelectedId && (
+            <DetailPanel
+              candidateId={effectiveSelectedId}
+              onNavigate={() => navigate(`/recruit/candidates/${effectiveSelectedId}`)}
+            />
           )}
         </div>
       </div>
@@ -483,7 +415,7 @@ export const RecruiterDashboardPage = () => {
       {showFilterDrawer && (
         <FilterDrawer
           filters={filters}
-          onApply={(next) => { setFilters(next); setShowFilterDrawer(false) }}
+          onApply={(next) => { setFilters(next); setPage(1); setShowFilterDrawer(false) }}
           onClose={() => setShowFilterDrawer(false)}
         />
       )}

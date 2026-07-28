@@ -1,4 +1,5 @@
 export { AlertCircleIcon }  from './AlertCircleIcon'
+export { BuildingIcon }     from './BuildingIcon'
 export { CalendarIcon }     from './CalendarIcon'
 export { ClipboardListIcon } from './ClipboardListIcon'
 export { GoogleIcon }       from './GoogleIcon'
