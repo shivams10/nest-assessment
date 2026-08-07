@@ -1,3 +1,5 @@
+// Prisma skips its own .env loading when a prisma.config.ts is present, so the
+// datasource url in schema.prisma would resolve to undefined without this.
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 

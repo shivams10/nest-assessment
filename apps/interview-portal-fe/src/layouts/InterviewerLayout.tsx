@@ -1,13 +1,14 @@
 import { Navigate } from 'react-router-dom'
 
-import { CalendarIcon, HomeIcon } from '@/components/icons'
+import { CalendarIcon, HelpCircleIcon, HomeIcon } from '@/components/icons'
 import { ROUTES } from '@/constants/routes'
 import { accessTokenStore, decodeToken } from '@/lib/token'
 import { AppLayout } from './AppLayout'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', icon: <HomeIcon size={16} />,     href: ROUTES.INTERVIEWER_DASHBOARD },
-  { label: 'Sessions',  icon: <CalendarIcon size={16} />, href: ROUTES.INTERVIEWER_SESSIONS  },
+  { label: 'Dashboard', icon: <HomeIcon size={16} />,       href: ROUTES.INTERVIEWER_DASHBOARD },
+  { label: 'Sessions',  icon: <CalendarIcon size={16} />,   href: ROUTES.INTERVIEWER_SESSIONS  },
+  { label: 'Questions', icon: <HelpCircleIcon size={16} />, href: ROUTES.INTERVIEWER_QUESTIONS },
 ]
 
 export const InterviewerLayout = () => {
