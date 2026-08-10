@@ -20,6 +20,7 @@ import { InterviewCandidatesModule } from './modules/interview-candidates/interv
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { QuestionBankModule } from './modules/question-bank/question-bank.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     CalendarModule,
     RoomsModule,
     SessionsModule,
+    QuestionBankModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,6 +7,7 @@ export const ROUTES = {
   RECRUITER_ROOMS:       '/recruit/rooms',
   INTERVIEWER_DASHBOARD: '/interview/dashboard',
   INTERVIEWER_SESSIONS:  '/interview/sessions',
+  INTERVIEWER_QUESTIONS: '/interview/questions',
 } as const
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES]

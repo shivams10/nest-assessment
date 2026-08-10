@@ -2,7 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -18,7 +17,7 @@ enum UserRole {
   admin
   moderator
   candidate
-  recruiter   // interview portal
+  recruiter // interview portal
   interviewer // interview portal
 }
 
@@ -147,6 +146,9 @@ model User {
   sessionFeedbacks        SessionFeedback[]  @relation("SessionFeedbackInterviewer")
   hiringDecisions         HiringDecision[]   @relation("HiringDecisionBy")
 
+  questionBankItemsCreated QuestionBankItem[] @relation("QuestionBankCreator")
+  questionBankItemsUpdated QuestionBankItem[] @relation("QuestionBankUpdater")
+
   @@index([role])
   @@index([collegeSessionId])
   @@index([invitedBy])
@@ -175,8 +177,8 @@ model RecruitmentSession {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  college College?   @relation(fields: [collegeId], references: [id])
-  creator User       @relation("SessionCreator", fields: [createdBy], references: [id])
+  college College? @relation(fields: [collegeId], references: [id])
+  creator User     @relation("SessionCreator", fields: [createdBy], references: [id])
 
   exams       Exam[]
   bulkUploads BulkUpload[]
@@ -398,7 +400,7 @@ model Candidate {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  adder            User               @relation("CandidateAddedBy", fields: [addedBy], references: [id])
+  adder             User               @relation("CandidateAddedBy", fields: [addedBy], references: [id])
   interviewSessions InterviewSession[]
   hiringDecisions   HiringDecision[]   @relation("HiringDecisionCandidate")
 
@@ -422,16 +424,16 @@ model MeetingRoom {
 }
 
 model InterviewSession {
-  id                   String                 @id @default(uuid())
-  candidateId          String
-  interviewerId        String
-  scheduledById        String
-  roomId               String?
-  scheduledAt          DateTime
-  durationMinutes      Int                    @default(60)
-  meetLink             String?
+  id                    String                 @id @default(uuid())
+  candidateId           String
+  interviewerId         String
+  scheduledById         String
+  roomId                String?
+  scheduledAt           DateTime
+  durationMinutes       Int                    @default(60)
+  meetLink              String?
   googleCalendarEventId String?
-  status               InterviewSessionStatus @default(scheduled)
+  status                InterviewSessionStatus @default(scheduled)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -478,14 +480,14 @@ model SessionQuestion {
 }
 
 model SessionLink {
-  id        String   @id @default(uuid())
-  sessionId String   @unique
-  token     String   @unique @default(uuid())
+  id        String    @id @default(uuid())
+  sessionId String    @unique
+  token     String    @unique @default(uuid())
   expiresAt DateTime
   sentAt    DateTime?
   openedAt  DateTime?
-  isExpired Boolean  @default(false)
-  createdAt DateTime @default(now())
+  isExpired Boolean   @default(false)
+  createdAt DateTime  @default(now())
 
   session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -503,17 +505,17 @@ model SessionNote {
 }
 
 model SessionFeedback {
-  id                    String                  @id @default(uuid())
-  sessionId             String                  @unique
-  interviewerId         String
-  problemSolvingRating  Int
-  codeQualityRating     Int
-  communicationRating   Int
-  systemDesignRating    Int
-  recommendation        InterviewRecommendation
-  notes                 String?
-  submittedAt           DateTime                @default(now())
-  createdAt             DateTime                @default(now())
+  id                   String                  @id @default(uuid())
+  sessionId            String                  @unique
+  interviewerId        String
+  problemSolvingRating Int
+  codeQualityRating    Int
+  communicationRating  Int
+  systemDesignRating   Int
+  recommendation       InterviewRecommendation
+  notes                String?
+  submittedAt          DateTime                @default(now())
+  createdAt            DateTime                @default(now())
 
   session     InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   interviewer User             @relation("SessionFeedbackInterviewer", fields: [interviewerId], references: [id])
@@ -552,4 +554,51 @@ model InterviewerCalendarCredential {
   userId       String   @id
   refreshToken String
   updatedAt    DateTime @updatedAt
+}
+
+/**
+ * ============================
+ * QUESTION BANK TABLES
+ * ============================
+ */
+
+model QuestionBankItem {
+  id         String                  @id @default(uuid())
+  tags       String[]                @default([]) // e.g. ["backend", "react", "typescript"]
+  type       InterviewQuestionType
+  difficulty QuestionDifficulty      @default(medium)
+  source     InterviewQuestionSource @default(manual)
+  prompt     String
+  points     Int                     @default(1)
+  options    Json? // mcq_single/mcq_multi only: [{ text: string, isCorrect: boolean }]
+
+  createdBy String
+  updatedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  creator   User                   @relation("QuestionBankCreator", fields: [createdBy], references: [id])
+  updater   User?                  @relation("QuestionBankUpdater", fields: [updatedBy], references: [id])
+  testCases QuestionBankTestCase[]
+
+  @@index([tags], type: Gin)
+  @@index([updatedBy])
+  @@index([type])
+  @@index([difficulty])
+  @@index([createdBy])
+}
+
+model QuestionBankTestCase {
+  id                 String  @id @default(uuid())
+  questionBankItemId String
+  input              String
+  expectedOutput     String
+  isHidden           Boolean @default(false)
+  weight             Int     @default(1)
+  order              Int     @default(0)
+
+  question QuestionBankItem @relation(fields: [questionBankItemId], references: [id], onDelete: Cascade)
+
+  @@index([questionBankItemId])
 }

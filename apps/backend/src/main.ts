@@ -7,6 +7,7 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: [
       'http://localhost:5173', // Vite dev server
+      'http://localhost:5174', // second Vite dev server (both apps running side by side)
     ],
     credentials: true, // REQUIRED for cookies / refresh tokens
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

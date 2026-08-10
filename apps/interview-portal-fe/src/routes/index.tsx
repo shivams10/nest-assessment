@@ -10,6 +10,7 @@ import { LoginPage }                  from '@/pages/auth/LoginPage'
 import { NotFoundPage }               from '@/pages/errors/NotFoundPage'
 import { InterviewerDashboardPage }   from '@/pages/interviewer/InterviewerDashboardPage'
 import { InterviewerSessionsPage }    from '@/pages/interviewer/InterviewerSessionsPage'
+import { QuestionsPage }              from '@/pages/interviewer/questions/QuestionsPage'
 import { RecruiterCandidatesPage }    from '@/pages/recruiter/RecruiterCandidatesPage'
 import { RecruiterDashboardPage }     from '@/pages/recruiter/RecruiterDashboardPage'
 import { RecruiterSchedulePage }      from '@/pages/recruiter/RecruiterSchedulePage'
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
             children: [
               { path: ROUTES.INTERVIEWER_DASHBOARD, element: <InterviewerDashboardPage /> },
               { path: ROUTES.INTERVIEWER_SESSIONS,  element: <InterviewerSessionsPage /> },
+              { path: ROUTES.INTERVIEWER_QUESTIONS, element: <QuestionsPage /> },
             ],
           },
 
